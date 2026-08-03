@@ -1,0 +1,10 @@
+################# BD
+oracledb>=2.4.0
+
+################# ML & Embeddings
+numpy>=1.26
+torch>=2.2.0
+transformers>=4.48.0
+
+################# PDF
+pypdf>=4.0
