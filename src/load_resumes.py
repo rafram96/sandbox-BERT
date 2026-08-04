@@ -12,6 +12,7 @@ import concurrent.futures as cf
 import json
 import os
 import re
+import shutil
 import time
 import zipfile
 from collections import defaultdict
@@ -26,6 +27,34 @@ from . import config
 # 1 hilo de OpenMP por proceso: evita que Tesseract se sobre-suscriba cuando
 # lo paralelizamos a nivel de proceso (los workers heredan este env en spawn).
 os.environ.setdefault("OMP_THREAD_LIMIT", "1")
+
+
+def _configurar_tesseract() -> None:
+    """Si tesseract no esta en el PATH, usa la ruta estandar de Windows."""
+    if shutil.which("tesseract"):
+        return
+    for p in (r"C:\Program Files\Tesseract-OCR\tesseract.exe",
+              r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe"):
+        if os.path.exists(p):
+            pytesseract.pytesseract.tesseract_cmd = p
+            return
+
+
+_configurar_tesseract()  # aplica en el proceso principal y en cada worker (spawn reimporta)
+
+
+def verificar_tesseract() -> str:
+    """Confirma que Tesseract es invocable. Corta con instrucciones si no lo es."""
+    _configurar_tesseract()
+    try:
+        return str(pytesseract.get_tesseract_version())
+    except Exception as e:  # noqa: BLE001
+        raise SystemExit(
+            "\nERROR: Tesseract no esta disponible; abortando antes de hacer OCR.\n"
+            "  - Instalar:  winget install UB-Mannheim.TesseractOCR\n"
+            "  - O al PATH: $env:Path += \";C:\\Program Files\\Tesseract-OCR\"\n"
+            f"  Detalle: {type(e).__name__}: {e}"
+        )
 
 # --- Normalizacion de categorias -------------------------------------------
 _ALIAS = {
@@ -78,6 +107,7 @@ _ZIP = None  # zip abierto una vez por worker (no se comparte entre procesos)
 def _init_worker(zip_path: str) -> None:
     global _ZIP
     os.environ["OMP_THREAD_LIMIT"] = "1"
+    _configurar_tesseract()
     _ZIP = zipfile.ZipFile(zip_path)
 
 
@@ -99,6 +129,7 @@ def cargar(zip_path: str, per_cat: int = 35, train_frac: float = 0.7, dpi: int =
 
     Devuelve stats y la lista de PDFs descartados (fallo de OCR o texto corto).
     """
+    print(f"Tesseract OK (v{verificar_tesseract()})")
     z = zipfile.ZipFile(zip_path)
     por_cat = defaultdict(list)
     for n in z.namelist():
