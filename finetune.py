@@ -27,9 +27,9 @@ import time
 import numpy as np
 import torch
 from torch.utils.data import Dataset
-from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
-                          DataCollatorWithPadding, EarlyStoppingCallback,
-                          Trainer, TrainingArguments)
+from transformers import (AutoConfig, AutoModelForSequenceClassification,
+                          AutoTokenizer, DataCollatorWithPadding,
+                          EarlyStoppingCallback, Trainer, TrainingArguments)
 
 
 def _load(path: str, text_key: str, label_key: str):
@@ -78,10 +78,12 @@ def main() -> None:
 
     tok = AutoTokenizer.from_pretrained(args.model)
     # ModernBERT usa torch.compile/Triton internamente (reference_compile); en Windows
-    # Triton no anda y el backward se vuelve lentisimo -> lo desactivamos.
-    extra = {"reference_compile": False} if "modernbert" in args.model.lower() else {}
-    model = AutoModelForSequenceClassification.from_pretrained(
-        args.model, num_labels=len(labels), id2label=id2l, label2id=l2id, **extra)
+    # Triton no anda y el backward se vuelve lentisimo -> lo desactivamos via config.
+    config = AutoConfig.from_pretrained(
+        args.model, num_labels=len(labels), id2label=id2l, label2id=l2id)
+    if hasattr(config, "reference_compile"):
+        config.reference_compile = False
+    model = AutoModelForSequenceClassification.from_pretrained(args.model, config=config)
 
     ds_train = CVDataset(train, tok, l2id, args.max_len)
     ds_test = CVDataset(test, tok, l2id, args.max_len)
