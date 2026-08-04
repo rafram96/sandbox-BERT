@@ -77,8 +77,11 @@ def main() -> None:
           f"GPU={'si' if torch.cuda.is_available() else 'NO (sera lento)'}")
 
     tok = AutoTokenizer.from_pretrained(args.model)
+    # ModernBERT usa torch.compile/Triton internamente (reference_compile); en Windows
+    # Triton no anda y el backward se vuelve lentisimo -> lo desactivamos.
+    extra = {"reference_compile": False} if "modernbert" in args.model.lower() else {}
     model = AutoModelForSequenceClassification.from_pretrained(
-        args.model, num_labels=len(labels), id2label=id2l, label2id=l2id)
+        args.model, num_labels=len(labels), id2label=id2l, label2id=l2id, **extra)
 
     ds_train = CVDataset(train, tok, l2id, args.max_len)
     ds_test = CVDataset(test, tok, l2id, args.max_len)
@@ -99,6 +102,7 @@ def main() -> None:
         save_total_limit=1,
         load_best_model_at_end=True,
         metric_for_best_model="accuracy",
+        fp16=torch.cuda.is_available(),   # mixed precision en GPU (Turing+): mas rapido
         logging_steps=50,
         report_to="none",
     )
