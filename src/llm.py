@@ -62,13 +62,13 @@ def _construir_prompt(texto: str, categoria_base: str, score_base: float,
     )
     lista = ", ".join(candidatas)
     return (
-        "You are a document classification assistant for resumes/CVs.\n"
-        "Choose the single best professional category for the RESUME below.\n\n"
-        f"RESUME TEXT (may be noisy OCR):\n{texto[:1500]}\n\n"
-        f"A lightweight classifier predicted: {categoria_base} (confidence {score_base:.2f}).\n"
-        f"The most similar labeled resumes (RAG Top-K) are:\n{vecinos_txt}\n\n"
-        f"Valid categories to choose from: {lista}\n\n"
-        "Reply with ONLY one category code from that list, nothing else."
+        "Eres un asistente de clasificacion de documentos (CVs / hojas de vida).\n"
+        "Elige la MEJOR categoria profesional para el CV de abajo.\n\n"
+        f"TEXTO DEL CV (puede tener ruido de OCR):\n{texto[:1500]}\n\n"
+        f"Un clasificador ligero predijo: {categoria_base} (confianza {score_base:.2f}).\n"
+        f"Los CVs etiquetados mas similares (RAG Top-K) son:\n{vecinos_txt}\n\n"
+        f"Categorias validas para elegir: {lista}\n\n"
+        "Responde SOLO con un codigo de categoria de esa lista, nada mas."
     )
 
 
