@@ -8,9 +8,11 @@ muestrea N por categoria y hace split train/test.
 from __future__ import annotations
 
 import argparse
-import io
+import concurrent.futures as cf
 import json
+import os
 import re
+import time
 import zipfile
 from collections import defaultdict
 from pathlib import Path
@@ -20,6 +22,10 @@ import pytesseract
 from PIL import Image
 
 from . import config
+
+# 1 hilo de OpenMP por proceso: evita que Tesseract se sobre-suscriba cuando
+# lo paralelizamos a nivel de proceso (los workers heredan este env en spawn).
+os.environ.setdefault("OMP_THREAD_LIMIT", "1")
 
 # --- Normalizacion de categorias -------------------------------------------
 _ALIAS = {
@@ -65,7 +71,110 @@ def ocr_pdf(data: bytes, dpi: int, max_pages: int) -> str:
     return re.sub(r"\s+", " ", " ".join(partes)).strip()
 
 
+# --- OCR paralelo (pool de procesos) ----------------------------------------
+_ZIP = None  # zip abierto una vez por worker (no se comparte entre procesos)
+
+
+def _init_worker(zip_path: str) -> None:
+    global _ZIP
+    os.environ["OMP_THREAD_LIMIT"] = "1"
+    _ZIP = zipfile.ZipFile(zip_path)
+
+
+def _ocr_task(args):
+    """Corre en un worker. args = (member, lbl, dpi, max_pages)."""
+    member, lbl, dpi, max_pages = args
+    try:
+        txt = ocr_pdf(_ZIP.read(member), dpi, max_pages)
+        return (member, lbl, txt, None)
+    except Exception as e:  # noqa: BLE001
+        return (member, lbl, None, type(e).__name__)
+
+
 # --- Carga ------------------------------------------------------------------
+def cargar(zip_path: str, per_cat: int = 35, train_frac: float = 0.7, dpi: int = 200,
+           max_pages: int = 2, min_chars: int = 120, min_cat: int = 15,
+           workers: int = 1) -> dict:
+    """OCR (paralelo si workers>1) + normalizacion + split.
+
+    Devuelve stats y la lista de PDFs descartados (fallo de OCR o texto corto).
+    """
+    z = zipfile.ZipFile(zip_path)
+    por_cat = defaultdict(list)
+    for n in z.namelist():
+        if n.lower().endswith(".pdf") and len(n.split("/")) > 2:
+            por_cat[normalizar_categoria(n.split("/")[1])].append(n)
+    z.close()
+    cats = {c: sorted(v) for c, v in por_cat.items() if len(v) >= min_cat}
+
+    # plan de tareas: los primeros per_cat PDFs de cada categoria
+    tareas = [(ruta, etiqueta(cat), dpi, max_pages)
+              for cat, rutas in sorted(cats.items()) for ruta in rutas[:per_cat]]
+    print(f"Categorias: {len(cats)}  |  PDFs a OCR: {len(tareas)}  |  workers: {workers}")
+
+    # OCR
+    total = len(tareas)
+    t0 = time.time()
+
+    def _progreso(k: int) -> None:
+        el = time.time() - t0
+        rate = k / el if el else 0
+        eta = (total - k) / rate if rate else 0
+        print(f"  ... {k}/{total}  |  transcurrido {el/60:.1f} min  |  "
+              f"{rate:.1f} pdf/s  |  ETA {eta/60:.1f} min")
+
+    resultados = []
+    if workers > 1:
+        with cf.ProcessPoolExecutor(max_workers=workers,
+                                    initializer=_init_worker, initargs=(zip_path,)) as ex:
+            for k, r in enumerate(ex.map(_ocr_task, tareas, chunksize=8), 1):
+                resultados.append(r)
+                if k % 200 == 0:
+                    _progreso(k)
+    else:
+        _init_worker(zip_path)
+        for k, t in enumerate(tareas, 1):
+            resultados.append(_ocr_task(t))
+            if k % 100 == 0:
+                _progreso(k)
+
+    ocr_seg = time.time() - t0
+
+    # agrupa por categoria, filtra fallos/texto corto
+    por_lbl = defaultdict(list)
+    errores = []  # {ruta, motivo}
+    for member, lbl, txt, err in resultados:
+        if err is not None:
+            errores.append({"ruta": member, "motivo": err})
+        elif len(txt) < min_chars:
+            errores.append({"ruta": member, "motivo": "texto_corto"})
+        else:
+            por_lbl[lbl].append((member, txt))
+
+    # split estratificado train/test (determinista: ordenado por member)
+    kb_path = config.ROOT / "data" / "resumes_kb.jsonl"
+    test_path = config.ROOT / "data" / "resumes_test.jsonl"
+    n_kb = n_test = 0
+    with kb_path.open("w", encoding="utf-8") as fkb, test_path.open("w", encoding="utf-8") as ftest:
+        for lbl in sorted(por_lbl):
+            recogidos = sorted(por_lbl[lbl])
+            corte = max(1, int(len(recogidos) * train_frac))
+            for j, (member, txt) in enumerate(recogidos):
+                if j < corte:
+                    fkb.write(json.dumps({"categoria": lbl, "texto": txt}, ensure_ascii=False) + "\n")
+                    n_kb += 1
+                else:
+                    rid = Path(member).stem + "_" + lbl
+                    ftest.write(json.dumps(
+                        {"id": rid, "texto": txt, "categoria_verdadera": lbl}, ensure_ascii=False) + "\n")
+                    n_test += 1
+
+    print(f"\nOK. KB={n_kb}  TEST={n_test}  descartados(OCR pobre)={len(errores)}  "
+          f"|  OCR en {ocr_seg/60:.1f} min")
+    return {"n_kb": n_kb, "n_test": n_test, "n_cats": len(cats), "ocr_seg": ocr_seg,
+            "kb_path": str(kb_path), "test_path": str(test_path), "errores": errores}
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--zip", type=str, default=str(config.ROOT / "data" / "archive (1).zip"))
@@ -75,53 +184,10 @@ def main() -> None:
     ap.add_argument("--max-pages", type=int, default=2)
     ap.add_argument("--min-chars", type=int, default=120, help="descarta OCR con menos texto")
     ap.add_argument("--min-cat", type=int, default=15, help="ignora categorias con menos PDFs")
+    ap.add_argument("--workers", type=int, default=1, help="procesos de OCR en paralelo")
     args = ap.parse_args()
-
-    z = zipfile.ZipFile(args.zip)
-    # agrupa rutas por categoria normalizada
-    por_cat = defaultdict(list)
-    for n in z.namelist():
-        if n.lower().endswith(".pdf") and len(n.split("/")) > 2:
-            por_cat[normalizar_categoria(n.split("/")[1])].append(n)
-    cats = {c: sorted(v) for c, v in por_cat.items() if len(v) >= args.min_cat}
-    print(f"Categorias usadas: {len(cats)}  (>= {args.min_cat} PDFs c/u)")
-
-    kb_path = config.ROOT / "data" / "resumes_kb.jsonl"
-    test_path = config.ROOT / "data" / "resumes_test.jsonl"
-    n_kb = n_test = n_skip = 0
-    with kb_path.open("w", encoding="utf-8") as fkb, test_path.open("w", encoding="utf-8") as ftest:
-        for ci, (cat, rutas) in enumerate(sorted(cats.items()), 1):
-            lbl = etiqueta(cat)
-            recogidos = []
-            for ruta in rutas:
-                if len(recogidos) >= args.per_cat:
-                    break
-                try:
-                    txt = ocr_pdf(z.read(ruta), args.dpi, args.max_pages)
-                except Exception:
-                    n_skip += 1
-                    continue
-                if len(txt) < args.min_chars:
-                    n_skip += 1
-                    continue
-                recogidos.append((ruta, txt))
-            # split estratificado
-            corte = max(1, int(len(recogidos) * args.train_frac))
-            for j, (ruta, txt) in enumerate(recogidos):
-                if j < corte:
-                    fkb.write(json.dumps({"categoria": lbl, "texto": txt}, ensure_ascii=False) + "\n")
-                    n_kb += 1
-                else:
-                    rid = Path(ruta).stem + "_" + lbl
-                    ftest.write(json.dumps(
-                        {"id": rid, "texto": txt, "categoria_verdadera": lbl}, ensure_ascii=False) + "\n")
-                    n_test += 1
-            print(f"  [{ci:>2}/{len(cats)}] {lbl:<26} recogidos={len(recogidos):>2} "
-                  f"(train {corte}, test {len(recogidos)-corte})")
-
-    print(f"\nOK. KB={n_kb}  TEST={n_test}  descartados(OCR pobre)={n_skip}")
-    print(f"  {kb_path}")
-    print(f"  {test_path}")
+    cargar(args.zip, args.per_cat, args.train_frac, args.dpi, args.max_pages,
+           args.min_chars, args.min_cat, args.workers)
 
 
 if __name__ == "__main__":

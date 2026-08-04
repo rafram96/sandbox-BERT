@@ -58,40 +58,34 @@ def _cargar(path: Path):
     return [json.loads(l) for l in path.read_text(encoding="utf-8").splitlines() if l.strip()]
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--in", dest="inp", required=True)
-    ap.add_argument("--out", dest="out", required=True)
-    ap.add_argument("--model", default=config.OLLAMA_MODEL)
-    ap.add_argument("--max-chars", type=int, default=4000)
-    ap.add_argument("--limit", type=int, default=0)
-    ap.add_argument("--resume", action="store_true")
-    args = ap.parse_args()
-
-    filas = _cargar(Path(args.inp))
-    if args.limit:
-        filas = filas[: args.limit]
+def traducir_archivo(inp: str, out: str, model: str, max_chars: int = 4000,
+                     limit: int = 0, resume: bool = False) -> dict:
+    """Traduce un JSONL. Devuelve stats y la lista de docs que fallaron."""
+    filas = _cargar(Path(inp))
+    if limit:
+        filas = filas[:limit]
 
     hechos = 0
-    out_path = Path(args.out)
-    if args.resume and out_path.exists():
+    out_path = Path(out)
+    if resume and out_path.exists():
         hechos = len(_cargar(out_path))
         print(f"Resume: ya hay {hechos} traducidos, continuo desde ahi.")
 
-    modo = "a" if (args.resume and hechos) else "w"
+    modo = "a" if (resume and hechos) else "w"
     total = len(filas)
-    print(f"Traduciendo {total - hechos} docs con {args.model} -> {args.out}")
+    print(f"Traduciendo {total - hechos} docs con {model} -> {out}")
 
-    n_ok = n_err = 0
+    n_ok = 0
+    errores = []  # {doc, id, error}
     t0 = time.time()
     with open(out_path, modo, encoding="utf-8") as f:
         for i in range(hechos, total):
             fila = filas[i]
             try:
-                fila["texto"] = traducir(fila["texto"], args.model, args.max_chars)
+                fila["texto"] = traducir(fila["texto"], model, max_chars)
                 n_ok += 1
             except Exception as e:  # deja el texto original si Ollama falla
-                n_err += 1
+                errores.append({"doc": i + 1, "id": fila.get("id", ""), "error": type(e).__name__})
                 print(f"  err doc {i + 1}: {type(e).__name__}")
             f.write(json.dumps(fila, ensure_ascii=False) + "\n")
             f.flush()
@@ -101,7 +95,20 @@ def main() -> None:
                 falta = (total - i - 1) * seg
                 print(f"  ... {i + 1}/{total}  ({seg:.1f}s/doc, ETA {falta/60:.0f} min)")
 
-    print(f"OK. traducidos={n_ok} errores={n_err} -> {args.out}")
+    print(f"OK. traducidos={n_ok} errores={len(errores)} -> {out}")
+    return {"n_ok": n_ok, "errores": errores, "out": out}
+
+
+def main() -> None:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--in", dest="inp", required=True)
+    ap.add_argument("--out", dest="out", required=True)
+    ap.add_argument("--model", default=config.OLLAMA_MODEL)
+    ap.add_argument("--max-chars", type=int, default=4000)
+    ap.add_argument("--limit", type=int, default=0)
+    ap.add_argument("--resume", action="store_true")
+    args = ap.parse_args()
+    traducir_archivo(args.inp, args.out, args.model, args.max_chars, args.limit, args.resume)
 
 
 if __name__ == "__main__":
