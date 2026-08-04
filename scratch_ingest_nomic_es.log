@@ -1,0 +1,7 @@
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+== Ingesta: embeddings del corpus resumes_kb_es_sub.jsonl ==
+[embeddings] Cargando nomic-ai/modernbert-embed-base (ModernBERT)... (1a vez descarga de HuggingFace)
+Loading weights:   0%|          | 0/134 [00:00<?, ?it/s]Loading weights: 100%|##########| 134/134 [00:00<00:00, 5306.54it/s]
+[embeddings] ModernBERT listo en cpu.
+  Backend de embeddings: ModernBERT  (1272 docs)
+  OK. Vectores cargados: 1272  |  categorias: 43
