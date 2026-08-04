@@ -22,12 +22,14 @@ from __future__ import annotations
 
 import argparse
 import json
+import time
 
 import numpy as np
 import torch
 from torch.utils.data import Dataset
 from transformers import (AutoModelForSequenceClassification, AutoTokenizer,
-                          DataCollatorWithPadding, Trainer, TrainingArguments)
+                          DataCollatorWithPadding, EarlyStoppingCallback,
+                          Trainer, TrainingArguments)
 
 
 def _load(path: str, text_key: str, label_key: str):
@@ -58,6 +60,8 @@ def main() -> None:
     ap.add_argument("--batch", type=int, default=16)
     ap.add_argument("--lr", type=float, default=2e-5)
     ap.add_argument("--max-len", type=int, default=512)
+    ap.add_argument("--patience", type=int, default=2,
+                    help="early stopping: para si no mejora en N epochs (0 = desactiva)")
     ap.add_argument("--out", default="ft-model")
     args = ap.parse_args()
 
@@ -98,18 +102,31 @@ def main() -> None:
         logging_steps=50,
         report_to="none",
     )
+    callbacks = []
+    if args.patience > 0:
+        callbacks.append(EarlyStoppingCallback(early_stopping_patience=args.patience))
     trainer = Trainer(
         model=model, args=targs,
         train_dataset=ds_train, eval_dataset=ds_test,
         data_collator=DataCollatorWithPadding(tok),
         compute_metrics=compute_metrics,
+        callbacks=callbacks,
     )
+
+    t0 = time.time()
     trainer.train()
+    train_seg = time.time() - t0
+
+    te0 = time.time()
     res = trainer.evaluate()
+    eval_seg = time.time() - te0
 
     print("\n" + "=" * 56)
     print(f"ACCURACY FINE-TUNED: {res['eval_accuracy']*100:.1f}%   "
           f"(baseline centroides ~55%)")
+    print(f"TIEMPO entrenamiento: {train_seg:.1f} s  ({train_seg/60:.1f} min)")
+    print(f"TIEMPO evaluacion:    {eval_seg:.1f} s")
+    print(f"Dispositivo: {'GPU ' + torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'CPU'}")
     print("=" * 56)
     trainer.save_model(args.out)
     tok.save_pretrained(args.out)
