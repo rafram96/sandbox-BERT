@@ -57,6 +57,7 @@ def main() -> None:
     ap.add_argument("--slug", default="hadikp/resume-data-pdf", help="dataset de Kaggle")
     ap.add_argument("--per-cat", type=int, default=35, help="PDFs por categoria a OCR-ear")
     ap.add_argument("--workers", type=int, default=1, help="procesos de OCR en paralelo")
+    ap.add_argument("--trans-workers", type=int, default=1, help="requests de traduccion concurrentes a Ollama")
     ap.add_argument("--model", default=config.OLLAMA_MODEL, help="modelo Ollama para traducir")
     ap.add_argument("--max-chars", type=int, default=800, help="recorte de texto al traducir")
     ap.add_argument("--skip-download", action="store_true")
@@ -74,13 +75,15 @@ def main() -> None:
     # 3. traducir KB
     print("\n[3/4] Traduciendo KB...")
     t_kb = time.time()
-    kb = translate.traducir_archivo(ocr["kb_path"], _es(ocr["kb_path"]), args.model, args.max_chars)
+    kb = translate.traducir_archivo(ocr["kb_path"], _es(ocr["kb_path"]), args.model,
+                                    args.max_chars, workers=args.trans_workers)
     t_kb = time.time() - t_kb
 
     # 4. traducir test
     print("\n[4/4] Traduciendo test...")
     t_te = time.time()
-    te = translate.traducir_archivo(ocr["test_path"], _es(ocr["test_path"]), args.model, args.max_chars)
+    te = translate.traducir_archivo(ocr["test_path"], _es(ocr["test_path"]), args.model,
+                                    args.max_chars, workers=args.trans_workers)
     t_te = time.time() - t_te
 
     # --- Reporte final de errores ---
