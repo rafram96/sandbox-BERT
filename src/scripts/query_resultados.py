@@ -1,5 +1,5 @@
-"""Muestra las clasificaciones persistidas en Oracle.  Uso: python query_resultados.py"""
-from src import db
+"""Muestra las clasificaciones persistidas en Oracle.  Uso: python -m src.scripts.query_resultados"""
+from ..core import db
 
 
 def main() -> None:

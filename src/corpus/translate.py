@@ -2,8 +2,8 @@
 
 Requisitos donde lo corras: Ollama levantado con el modelo, y este repo.
 
-    python -m src.translate --in data/resumes_kb.jsonl   --out data/resumes_kb_es.jsonl
-    python -m src.translate --in data/resumes_test.jsonl --out data/resumes_test_es.jsonl
+    python -m src.corpus.translate --in data/resumes_kb.jsonl   --out data/resumes_kb_es.jsonl
+    python -m src.corpus.translate --in data/resumes_test.jsonl --out data/resumes_test_es.jsonl
 
 Opciones:
     --model M        modelo Ollama (default: OLLAMA_MODEL del .env)
@@ -21,7 +21,7 @@ import time
 import urllib.request
 from pathlib import Path
 
-from . import config
+from .. import config
 
 _PREAMBULO = re.compile(
     r"^\s*(aqu[ií] est[aá][^\n:]*:|here is[^\n:]*:|traducci[oó]n[^\n:]*:|translation[^\n:]*:)\s*",

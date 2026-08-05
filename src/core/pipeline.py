@@ -7,8 +7,9 @@ from typing import List, Optional
 
 import oracledb
 
-from . import config, db, llm, rag
-from .classifier import ClasificadorLigero, Prediccion
+from .. import config
+from . import db, llm, rag
+from .classifier import Prediccion, get_clasificador
 from .rag import Vecino
 
 
@@ -30,8 +31,8 @@ class Pipeline:
     def __init__(self, umbral: float = None, top_k: int = None):
         self.umbral = config.CONFIDENCE_THRESHOLD if umbral is None else umbral
         self.top_k = config.TOP_K if top_k is None else top_k
-        print(f"[pipeline] Entrenando clasificador ligero (centroides ModernBERT)...")
-        self.clf = ClasificadorLigero().entrenar_desde_bd()
+        print(f"[pipeline] Preparando clasificador (modo: {config.CLASSIFIER_MODE})...")
+        self.clf = get_clasificador()
 
     ################# Flujo de un documento
     def procesar(self, texto: str, expediente: Optional[str] = None) -> Resultado:

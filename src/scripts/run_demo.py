@@ -1,14 +1,16 @@
 """Demo end-to-end: bootstrap + ingest + flujo sobre data/entrantes.jsonl.
 
-python run_demo.py [--skip-setup] [--umbral X]
+python -m src.scripts.run_demo [--skip-setup] [--umbral X]
 """
 from __future__ import annotations
 
 import argparse
 import json
 
-from src import bootstrap, config, db, embeddings, ingest
-from src.pipeline import Pipeline, Resultado
+from .. import config
+from ..core import db, embeddings
+from ..corpus import bootstrap, ingest
+from ..core.pipeline import Pipeline, Resultado
 
 
 def _fmt(res: Resultado) -> str:
@@ -65,7 +67,7 @@ def main() -> None:
         n_llm += res.ruta == "llm"
 
     print(f"\nResumen: {len(entrantes)} documentos  |  ruta rapida: {n_rapida}  |  escalaron a LLM: {n_llm}")
-    print("Consulta los resultados persistidos con:  python query_resultados.py")
+    print("Consulta los resultados persistidos con:  python -m src.scripts.query_resultados")
 
 
 if __name__ == "__main__":

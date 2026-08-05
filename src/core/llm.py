@@ -11,7 +11,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import List
 
-from . import config
+from .. import config
 from .rag import Vecino
 
 

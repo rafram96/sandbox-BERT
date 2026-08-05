@@ -7,12 +7,12 @@ Requiere GPU para ser practico. En el server:
     pip install torch transformers numpy          # torch con soporte CUDA
 
     # Ingles (mas datos, ModernBERT):
-    python finetune.py --train data/servidor/traducciones/resumes_kb.jsonl \
+    python -m src.training.finetune --train data/servidor/traducciones/resumes_kb.jsonl \
                        --test  data/servidor/traducciones/resumes_test.jsonl \
                        --model answerdotai/ModernBERT-base --epochs 4
 
     # Espanol (base multilingue):
-    python finetune.py --train data/resumes_kb_es_sub.jsonl \
+    python -m src.training.finetune --train data/resumes_kb_es_sub.jsonl \
                        --test  data/resumes_test_es_sub.jsonl \
                        --model xlm-roberta-base --epochs 5
 

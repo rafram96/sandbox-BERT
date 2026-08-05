@@ -1,6 +1,6 @@
 """Embebe el corpus y recarga kb_documentos. Las categorias salen del corpus.
 
-python -m src.ingest [--corpus RUTA.jsonl]
+python -m src.corpus.ingest [--corpus RUTA.jsonl]
 """
 from __future__ import annotations
 
@@ -8,7 +8,8 @@ import argparse
 import json
 from pathlib import Path
 
-from . import config, db, embeddings
+from .. import config
+from ..core import db, embeddings
 
 
 def cargar_corpus(path: Path):

@@ -5,6 +5,10 @@ oracledb>=2.4.0
 numpy>=1.26
 torch>=2.2.0
 transformers>=4.48.0
+accelerate>=1.1.0
 
-################# PDF
+################# PDF y OCR
 pypdf>=4.0
+pymupdf>=1.24
+pytesseract>=0.3.10
+pillow>=10.0

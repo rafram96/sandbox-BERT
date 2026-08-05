@@ -6,7 +6,7 @@ from typing import List
 
 import numpy as np
 
-from . import config
+from .. import config
 
 _backend = None  # se resuelve lazy en la primera llamada
 

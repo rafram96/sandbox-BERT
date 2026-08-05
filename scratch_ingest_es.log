@@ -1,10 +1,0 @@
-C:\Users\Holbi\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.12_qbz5n2kfra8p0\LocalCache\local-packages\Python312\site-packages\huggingface_hub\file_download.py:141: UserWarning: `huggingface_hub` cache-system uses symlinks by default to efficiently store duplicated files but your machine does not support them in C:\Users\Holbi\.cache\huggingface\hub\models--intfloat--multilingual-e5-base. Caching files will still work but in a degraded version that might require more space on your disk. This warning can be disabled by setting the `HF_HUB_DISABLE_SYMLINKS_WARNING` environment variable. For more details, see https://huggingface.co/docs/huggingface_hub/how-to-cache#limitations.
-To support symlinks on Windows, you either need to activate Developer Mode or to run Python as an administrator. In order to activate developer mode, see this article: https://docs.microsoft.com/en-us/windows/apps/get-started/enable-your-device-for-development
-  warnings.warn(message)
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-== Ingesta: embeddings del corpus resumes_kb_es_sub.jsonl ==
-[embeddings] Cargando intfloat/multilingual-e5-base (ModernBERT)... (1a vez descarga de HuggingFace)
-Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|##########| 199/199 [00:00<00:00, 7565.80it/s]
-[embeddings] ModernBERT listo en cpu.
-  Backend de embeddings: ModernBERT  (1272 docs)
-  OK. Vectores cargados: 1272  |  categorias: 43

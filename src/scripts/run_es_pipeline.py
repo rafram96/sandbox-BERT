@@ -1,7 +1,7 @@
 """Pipeline ES de punta a punta: descarga el zip -> OCR + split -> traduce KB y test.
 Al final NOTIFICA todos los errores (OCR descartado + docs que fallaron al traducir).
 
-    python run_es_pipeline.py --per-cat 40 --model qwen2.5:7b
+    python -m src.scripts.run_es_pipeline --per-cat 40 --model qwen2.5:7b
 
 Requiere: Tesseract + Ollama (con el modelo) corriendo. El zip se descarga de
 Kaggle si no esta en data/ (necesita 'pip install kaggle' + ~/.kaggle/kaggle.json).
@@ -14,7 +14,8 @@ import subprocess
 import time
 from pathlib import Path
 
-from src import config, load_resumes, translate
+from .. import config
+from ..corpus import load_resumes, translate
 
 
 def _es(path: str) -> str:

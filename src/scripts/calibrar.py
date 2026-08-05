@@ -4,7 +4,7 @@ Barre umbrales y, para cada uno, mide cobertura y accuracy de la ruta rapida.
 Recomienda el umbral MAS BAJO cuya ruta rapida cumpla el target de accuracy
 (mas cobertura posible sin bajar de esa precision).
 
-    python calibrar.py --test data/resumes_test_es_sub.jsonl [--target 0.95]
+    python -m src.scripts.calibrar --test data/resumes_test_es_sub.jsonl [--target 0.95]
 """
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ import argparse
 import json
 import statistics as st
 
-from src.classifier import ClasificadorLigero
+from ..core.classifier import get_clasificador
 
 
 def main() -> None:
@@ -21,7 +21,7 @@ def main() -> None:
     ap.add_argument("--target", type=float, default=0.95, help="accuracy minima en ruta rapida")
     args = ap.parse_args()
 
-    clf = ClasificadorLigero().entrenar_desde_bd()
+    clf = get_clasificador()
     filas = [json.loads(l) for l in open(args.test, encoding="utf-8") if l.strip()]
     rows = []  # (margen, base_correcta)
     for d in filas:

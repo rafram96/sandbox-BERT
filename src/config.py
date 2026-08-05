@@ -21,9 +21,15 @@ ORA_PASSWORD = os.environ.get("ORA_PASSWORD", "sunafil")
 ORA_DSN = os.environ.get("ORA_DSN", "localhost:1521/FREEPDB1")
 
 ################# Flujo
+# Clasificador: "centroide" (embeddings, sin entrenar) | "finetuned" (finetune.py)
+CLASSIFIER_MODE = os.environ.get("CLASSIFIER_MODE", "centroide")
+FT_MODEL_PATH = os.environ.get("FT_MODEL_PATH", "ft-model")
+# Tokenizer del modelo fine-tuned; si el checkpoint no lo trae, se usa este (la base).
+FT_TOKENIZER = os.environ.get("FT_TOKENIZER", "xlm-roberta-base")
+
 # Metrica de la puerta de confianza:
-#   "margen"  -> coseno(top1)-coseno(top2). Indep. del #clases. RECOMENDADO.
-#   "softmax" -> prob softmax de la mejor clase (se diluye con muchas clases).
+#   "margen"  -> top1-top2. Indep. del #clases. Bueno para centroides.
+#   "softmax" -> prob softmax de la mejor clase. Con clasificador finetuned ya es fiable.
 CONFIDENCE_METRIC = os.environ.get("CONFIDENCE_METRIC", "margen")
 CONFIDENCE_THRESHOLD = float(os.environ.get("CONFIDENCE_THRESHOLD", "0.05"))
 TOP_K = int(os.environ.get("TOP_K", "5"))

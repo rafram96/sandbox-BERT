@@ -22,17 +22,29 @@ cp .env.example .env
 Demo SUNAFIL:
 
 ```bash
-py run_demo.py
-py query_resultados.py
+py -m src.scripts.run_demo
+py -m src.scripts.query_resultados
 ```
 
 Dataset de resumes (Kaggle resume-data-pdf, PDFs escaneados -> OCR):
 
 ```bash
-py -m src.load_resumes --per-cat 22           # OCR + split train/test
-py -m src.ingest --corpus data/resumes_kb.jsonl
-py evaluate.py --test data/resumes_test.jsonl
+py -m src.corpus.load_resumes --per-cat 22        # OCR + split train/test
+py -m src.corpus.ingest --corpus data/resumes_kb.jsonl
+py -m src.scripts.evaluate --test data/resumes_test.jsonl
 ```
+
+## Pipelines de clasificación
+
+Dos opciones de entrenamiento, cada una en su carpeta:
+
+| | Documentos | Idiomas | Acierto |
+|---|---|---|---|
+| [01 — ModernBERT](pipelines/01-modernbert-doc-largo/) | hasta ~20 páginas | inglés | 54.2% |
+| [02 — XLM-RoBERTa](pipelines/02-xlmroberta-multilingue/) | hasta ~1.5 páginas | multilingüe | 80.5% |
+
+En [pipelines/README.md](pipelines/README.md) está la comparación y por qué
+XLM-RoBERTa no sirve para documentos largos.
 
 ## Config (`.env`)
 
@@ -44,9 +56,13 @@ py evaluate.py --test data/resumes_test.jsonl
 ## Estructura
 
 ```
-sql/            esquema (tabla VECTOR 768) y seed
-data/           corpus y sets de prueba (.jsonl)
-src/            db, embeddings, classifier, rag, llm, pipeline, ingest, load_resumes
-run_demo.py     demo end-to-end
-evaluate.py     métricas sobre un test etiquetado
+sql/               esquema (tabla VECTOR 768) y seed
+data/              corpus y sets de prueba (.jsonl)
+pipelines/         opciones de entrenamiento (ModernBERT / XLM-RoBERTa)
+src/
+  config.py        configuración (.env)
+  core/            db, embeddings, classifier, rag, llm, pipeline
+  corpus/          bootstrap, ingest, load_resumes, translate
+  training/        finetune
+  scripts/         run_demo, evaluate, calibrar, query_resultados, run_es_pipeline
 ```

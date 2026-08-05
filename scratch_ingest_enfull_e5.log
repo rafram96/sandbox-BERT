@@ -1,7 +1,0 @@
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-== Ingesta: embeddings del corpus resumes_kb_en_sub.jsonl ==
-[embeddings] Cargando intfloat/multilingual-e5-base (ModernBERT)... (1a vez descarga de HuggingFace)
-Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|##########| 199/199 [00:00<00:00, 2715.55it/s]
-[embeddings] ModernBERT listo en cpu.
-  Backend de embeddings: ModernBERT  (1272 docs)
-  OK. Vectores cargados: 1272  |  categorias: 43

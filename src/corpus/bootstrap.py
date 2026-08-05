@@ -1,10 +1,11 @@
-"""Ejecuta los .sql de /sql para crear el esquema. python -m src.bootstrap"""
+"""Ejecuta los .sql de /sql para crear el esquema. python -m src.corpus.bootstrap"""
 from __future__ import annotations
 
 from pathlib import Path
 from typing import List
 
-from . import config, db
+from .. import config
+from ..core import db
 
 
 def split_statements(raw: str) -> List[str]:

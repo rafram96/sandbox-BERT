@@ -2,7 +2,7 @@
 
 Test JSONL: {"id": "...", "texto": "...", "categoria_verdadera": "IT"}
 
-python evaluate.py --test data/test.jsonl [--umbral X]
+python -m src.scripts.evaluate --test data/test.jsonl [--umbral X]
 """
 from __future__ import annotations
 
@@ -11,8 +11,8 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
-from src import config
-from src.pipeline import Pipeline
+from .. import config
+from ..core.pipeline import Pipeline
 
 
 def cargar(path: Path):

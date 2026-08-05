@@ -3,7 +3,7 @@ import array
 import time
 import oracledb
 
-from . import config
+from .. import config
 
 
 def connect(retries: int = 1, delay: float = 3.0) -> oracledb.Connection:

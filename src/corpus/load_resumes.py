@@ -3,7 +3,7 @@
 PDFs escaneados: OCR con PyMuPDF + Tesseract. Normaliza carpetas a categorias,
 muestrea N por categoria y hace split train/test.
 
-    python -m src.load_resumes --per-cat 35
+    python -m src.corpus.load_resumes --per-cat 35
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ import fitz  # PyMuPDF
 import pytesseract
 from PIL import Image
 
-from . import config
+from .. import config
 
 # 1 hilo de OpenMP por proceso: evita que Tesseract se sobre-suscriba cuando
 # lo paralelizamos a nivel de proceso (los workers heredan este env en spawn).
