@@ -34,7 +34,16 @@ from transformers import (AutoConfig, AutoModelForSequenceClassification,
 
 def _load(path: str, text_key: str, label_key: str):
     rows = [json.loads(l) for l in open(path, encoding="utf-8") if l.strip()]
-    return [(r[text_key], r[label_key]) for r in rows]
+    out = []
+    for r in rows:
+        t = r.get(text_key)
+        if isinstance(t, list):          # texto quedo como lista -> unir
+            t = " ".join(map(str, t))
+        t = ("" if t is None else str(t)).strip()
+        lbl = r.get(label_key)
+        if t and lbl:                    # descarta texto vacio/null o sin etiqueta
+            out.append((t, lbl))
+    return out
 
 
 class CVDataset(Dataset):
