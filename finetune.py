@@ -35,14 +35,19 @@ from transformers import (AutoConfig, AutoModelForSequenceClassification,
 def _load(path: str, text_key: str, label_key: str):
     rows = [json.loads(l) for l in open(path, encoding="utf-8") if l.strip()]
     out = []
+    coerced = dropped = 0
     for r in rows:
         t = r.get(text_key)
-        if isinstance(t, list):          # texto quedo como lista -> unir
-            t = " ".join(map(str, t))
-        t = ("" if t is None else str(t)).strip()
+        if not isinstance(t, str):       # lista/null/numero -> a string
+            coerced += 1
+            t = " ".join(map(str, t)) if isinstance(t, list) else ("" if t is None else str(t))
+        t = t.strip()
         lbl = r.get(label_key)
-        if t and lbl:                    # descarta texto vacio/null o sin etiqueta
-            out.append((t, lbl))
+        if t and lbl:
+            out.append((t, str(lbl)))
+        else:
+            dropped += 1
+    print(f"  [_load {path}] validos={len(out)} coercionados={coerced} descartados={dropped}")
     return out
 
 
@@ -55,7 +60,7 @@ class CVDataset(Dataset):
 
     def __getitem__(self, i):
         texto, label = self.pairs[i]
-        enc = self.tok(texto, truncation=True, max_length=self.max_len)
+        enc = self.tok(str(texto), truncation=True, max_length=self.max_len)  # str() garantizado
         enc["labels"] = self.l2id[label]
         return enc
 
