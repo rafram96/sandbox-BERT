@@ -28,8 +28,8 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 from transformers import (AutoConfig, AutoModelForSequenceClassification,
-                          AutoTokenizer, DataCollatorWithPadding,
-                          EarlyStoppingCallback, Trainer, TrainingArguments)
+                          AutoTokenizer, EarlyStoppingCallback, Trainer,
+                          TrainingArguments)
 
 
 def _load(path: str, text_key: str, label_key: str):
@@ -60,9 +60,14 @@ class CVDataset(Dataset):
 
     def __getitem__(self, i):
         texto, label = self.pairs[i]
-        enc = self.tok(str(texto), truncation=True, max_length=self.max_len)  # str() garantizado
-        enc["labels"] = self.l2id[label]
-        return enc
+        # padding a longitud fija -> todos los samples uniformes, sin padding dinamico
+        enc = self.tok(str(texto), truncation=True, max_length=self.max_len,
+                       padding="max_length")
+        return {
+            "input_ids": enc["input_ids"],
+            "attention_mask": enc["attention_mask"],
+            "labels": self.l2id[label],
+        }
 
 
 def main() -> None:
@@ -128,7 +133,6 @@ def main() -> None:
     trainer = Trainer(
         model=model, args=targs,
         train_dataset=ds_train, eval_dataset=ds_test,
-        data_collator=DataCollatorWithPadding(tok),
         compute_metrics=compute_metrics,
         callbacks=callbacks,
     )
