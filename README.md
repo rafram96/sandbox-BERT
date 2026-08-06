@@ -36,12 +36,14 @@ py -m src.scripts.evaluate --test data/resumes_test.jsonl
 
 ## Pipelines de clasificación
 
-Dos opciones de entrenamiento, cada una en su carpeta:
+Cuatro opciones de entrenamiento, cada una en su carpeta:
 
 | | Documentos | Idiomas | Acierto |
 |---|---|---|---|
 | [01 — ModernBERT](pipelines/01-modernbert-doc-largo/) | hasta ~20 páginas | inglés | 54.2% |
 | [02 — XLM-RoBERTa](pipelines/02-xlmroberta-multilingue/) | hasta ~1.5 páginas | multilingüe | 80.5% |
+| [03 — BETO](pipelines/03-beto-espanol/) | hasta ~1.5 páginas | español | pendiente |
+| [04 — Longformer](pipelines/04-longformer-espanol/) | hasta ~10 páginas | español | pendiente |
 
 En [pipelines/README.md](pipelines/README.md) está la comparación y por qué
 XLM-RoBERTa no sirve para documentos largos.
@@ -58,11 +60,11 @@ XLM-RoBERTa no sirve para documentos largos.
 ```
 sql/               esquema (tabla VECTOR 768) y seed
 data/              corpus y sets de prueba (.jsonl)
-pipelines/         opciones de entrenamiento (ModernBERT / XLM-RoBERTa)
+pipelines/         opciones de entrenamiento (ModernBERT / XLM-RoBERTa / BETO / Longformer)
 src/
   config.py        configuración (.env)
   core/            db, embeddings, classifier, rag, llm, pipeline
   corpus/          bootstrap, ingest, load_resumes, translate
-  training/        finetune
+  training/        finetune, chunking (documentos largos por trozos)
   scripts/         run_demo, evaluate, calibrar, query_resultados, run_es_pipeline
 ```

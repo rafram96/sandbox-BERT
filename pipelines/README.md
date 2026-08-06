@@ -1,14 +1,14 @@
 # Pipelines de clasificación
 
-Dos opciones de entrenamiento, cada una en su carpeta.
+Cuatro opciones de entrenamiento, cada una en su carpeta.
 
-| | [01 — ModernBERT](01-modernbert-doc-largo/) | [02 — XLM-RoBERTa](02-xlmroberta-multilingue/) |
-|---|---|---|
-| Tamaño de documento | Hasta ~20 páginas | Hasta ~1.5 páginas |
-| Idiomas | Solo inglés | 100 idiomas, incluye español |
-| GPU | Necesita una reciente (RTX 30xx en adelante) | Cualquiera |
-| Acierto medido | 54.2% | 80.5% |
-| Tiempo | 2h 10min | 6 min |
+| | [01 — ModernBERT](01-modernbert-doc-largo/) | [02 — XLM-RoBERTa](02-xlmroberta-multilingue/) | [03 — BETO](03-beto-espanol/) | [04 — Longformer](04-longformer-espanol/) |
+|---|---|---|---|---|
+| Tamaño de documento | Hasta ~20 páginas | Hasta ~1.5 páginas | Hasta ~1.5 páginas | Hasta ~10 páginas |
+| Idiomas | Solo inglés | 100 idiomas, incluye español | Solo español | Solo español |
+| GPU | Necesita una reciente (RTX 30xx en adelante) | Cualquiera | Cualquiera | Cualquiera, con bastante memoria |
+| Acierto medido | 54.2% | 80.5% | pendiente | pendiente |
+| Tiempo | 2h 10min | 6 min | pendiente | pendiente |
 
 El 54.2% de ModernBERT se midió en una GPU antigua, con pocos datos y sin
 aprovechar su capacidad de documentos largos, así que no refleja su potencial.
@@ -36,8 +36,18 @@ Si se necesitan documentos largos en español, hay tres caminos:
 
 1. Usar ModernBERT (opción 01), aunque está entrenado en inglés.
 2. Partir el documento en pedazos, clasificar cada uno y combinar el resultado.
-   Reutiliza el modelo que ya da 80.5%.
-3. Buscar un modelo multilingüe que acepte documentos largos.
+   Reutiliza el modelo que ya da 80.5%. **Ya está implementado**:
+
+   ```
+   python -m src.training.chunking --test resumes_test_es.jsonl \
+       --model-path ft-xlmroberta --tokenizer xlm-roberta-base
+   ```
+
+   Combina los pedazos promediando (`--agregacion mean`) o quedándose con el
+   pedazo más seguro (`--agregacion max`), y con `--paginas extremos` mira solo la
+   primera página, la del medio y la última, que suele bastar y es mucho más
+   rápido. Al final imprime cuánto mejora frente a leer solo la primera parte.
+3. Usar un modelo en español que acepte documentos largos: es el pipeline 04.
 
 Para documentos de mesa de partes, la opción 2 suele ser la más práctica: en un
 documento largo, lo que define su categoría casi nunca está repartido por todas
