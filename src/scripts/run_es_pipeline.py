@@ -87,7 +87,6 @@ def main() -> None:
                                     args.max_chars, workers=args.trans_workers)
     t_te = time.time() - t_te
 
-    # --- Reporte final de errores ---
     errores = {
         "ocr_descartados": ocr["errores"],
         "traduccion_kb": kb["errores"],
@@ -113,7 +112,6 @@ def main() -> None:
     print(f"  Traduccion KB fallida:                {len(errores['traduccion_kb'])}")
     print(f"  Traduccion test fallida:              {len(errores['traduccion_test'])}")
 
-    # muestra hasta 10 de cada tipo en consola
     for etapa, items in errores.items():
         for it in items[:10]:
             print(f"    [{etapa}] {it}")

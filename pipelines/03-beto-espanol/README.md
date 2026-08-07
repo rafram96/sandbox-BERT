@@ -22,13 +22,37 @@ python pipelines/03-beto-espanol/run.py
 
 ## Resultado
 
-Pendiente de correr.
+### Piloto de infraestructura (CPU)
+
+Se verificó el pipeline de punta a punta con el checkpoint oficial
+`dccuchile/bert-base-spanish-wwm-cased` y una muestra balanceada de documentos
+cortos del corpus principal.
 
 | | |
 |---|---|
-| Acierto | — |
-| Tiempo | — |
-| Datos | 6195 entrenamiento / 2681 prueba, 43 categorías |
+| Acierto | 4.0% (12/301), **no concluyente** |
+| Entrenamiento | 15.1 min, 1 época, CPU |
+| Evaluación | 73 s |
+| Datos | 645 entrenamiento / 301 prueba, 43 categorías |
+| Longitud | 256 tokens |
+| Checkpoint | `ft-beto-short-pilot/` |
+
+El piloto usa solo 15 documentos de entrenamiento por categoría y una época. Su
+objetivo es comprobar que la descarga, tokenización, entrenamiento, evaluación y
+guardado funcionan; **no debe compararse** con el 80.5% de XLM-RoBERTa, obtenido
+con 6195 documentos y cinco épocas.
+
+Una medición comparable sigue pendiente y debe ejecutarse preferentemente en
+GPU con el comando normal de este pipeline. Extrapolando el rendimiento medido
+en esta máquina, las 12 épocas sobre el corpus completo tardarían alrededor de
+30 horas en CPU.
+
+### Auditoría de longitud
+
+En el corpus principal, 92.1% de los documentos de entrenamiento y 92.3% de los
+de prueba caben completos en 256 tokens. Por tanto, este corpus sí es adecuado
+para medir BETO en documentos cortos. El subconjunto ubicado bajo `data/` no lo
+es: más de 95% supera los 256 tokens y queda truncado.
 
 ## Usarlo en el sandbox
 

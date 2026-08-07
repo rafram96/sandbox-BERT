@@ -34,6 +34,16 @@ py -m src.corpus.ingest --corpus data/resumes_kb.jsonl
 py -m src.scripts.evaluate --test data/resumes_test.jsonl
 ```
 
+Traduccion completa EN -> ES sin Ollama (MarianMT local):
+
+```bash
+py -m src.corpus.translate_mt --in data/resumes_kb.jsonl --out data/resumes_kb_es_full.jsonl
+py -m src.corpus.translate_mt --in data/resumes_test.jsonl --out data/resumes_test_es_full.jsonl
+```
+
+El traductor divide cada documento por tokens y no recorta el contenido. Si se
+interrumpe, repite el mismo comando con `--resume`.
+
 ## Pipelines de clasificación
 
 Cuatro opciones de entrenamiento, cada una en su carpeta:
@@ -42,7 +52,7 @@ Cuatro opciones de entrenamiento, cada una en su carpeta:
 |---|---|---|---|
 | [01 — ModernBERT](pipelines/01-modernbert-doc-largo/) | hasta ~20 páginas | inglés | 54.2% |
 | [02 — XLM-RoBERTa](pipelines/02-xlmroberta-multilingue/) | hasta ~1.5 páginas | multilingüe | 80.5% |
-| [03 — BETO](pipelines/03-beto-espanol/) | hasta ~1.5 páginas | español | pendiente |
+| [03 — BETO](pipelines/03-beto-espanol/) | hasta ~1.5 páginas | español | piloto 4.0% (1 época; no concluyente) |
 | [04 — Longformer](pipelines/04-longformer-espanol/) | hasta ~10 páginas | español | pendiente |
 
 En [pipelines/README.md](pipelines/README.md) está la comparación y por qué

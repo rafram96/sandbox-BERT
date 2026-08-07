@@ -7,8 +7,8 @@ Cuatro opciones de entrenamiento, cada una en su carpeta.
 | Tamaño de documento | Hasta ~20 páginas | Hasta ~1.5 páginas | Hasta ~1.5 páginas | Hasta ~10 páginas |
 | Idiomas | Solo inglés | 100 idiomas, incluye español | Solo español | Solo español |
 | GPU | Necesita una reciente (RTX 30xx en adelante) | Cualquiera | Cualquiera | Cualquiera, con bastante memoria |
-| Acierto medido | 54.2% | 80.5% | pendiente | pendiente |
-| Tiempo | 2h 10min | 6 min | pendiente | pendiente |
+| Acierto medido | 54.2% | 80.5% | piloto 4.0% (no concluyente) | pendiente |
+| Tiempo | 2h 10min | 6 min | 15.1 min en CPU (1 época/645 docs) | pendiente |
 
 El 54.2% de ModernBERT se midió en una GPU antigua, con pocos datos y sin
 aprovechar su capacidad de documentos largos, así que no refleja su potencial.

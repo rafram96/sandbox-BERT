@@ -37,11 +37,9 @@ class Pipeline:
     ################# Flujo de un documento
     def procesar(self, texto: str, expediente: Optional[str] = None) -> Resultado:
         pred: Prediccion = self.clf.classify(texto)
-        # confianza segun la metrica configurada (margen indep. del #clases)
         conf = pred.margen if config.CONFIDENCE_METRIC == "margen" else pred.score
 
         if conf >= self.umbral:
-            # RUTA RAPIDA -- confianza alta, se usa la prediccion directa
             res = Resultado(
                 documento_id=-1, expediente=expediente,
                 categoria_base=pred.categoria, score_base=conf,
@@ -49,7 +47,6 @@ class Pipeline:
                 etiqueta_final=pred.categoria, revision_humana=False,
             )
         else:
-            # ESCALA -- la ruta al LLM es, en si misma, la senal de ambiguedad
             vecinos = rag.top_k(texto, k=self.top_k)
             decision = llm.decidir(texto, pred.categoria, pred.score, vecinos)
             res = Resultado(

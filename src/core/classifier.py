@@ -66,13 +66,12 @@ class ClasificadorLigero:
     def classify(self, texto: str) -> Prediccion:
         if self._centroides is None:
             raise RuntimeError("Clasificador no entrenado. Llama entrenar_desde_bd().")
-        q = embeddings.embed_one(texto, is_query=True)  # ya viene L2-normalizado
-        sims = self._centroides @ q                     # coseno vs cada centroide
+        q = embeddings.embed_one(texto, is_query=True)
+        sims = self._centroides @ q
         orden_sims = np.argsort(-sims)
         top1_sim = float(sims[orden_sims[0]])
         top2_sim = float(sims[orden_sims[1]]) if len(sims) > 1 else 0.0
-        margen = top1_sim - top2_sim                    # confianza indep. de #clases
-        # softmax (se conserva para el ranking, aunque diluye con muchas clases)
+        margen = top1_sim - top2_sim
         logits = sims / max(self.temperatura, 1e-6)
         logits -= logits.max()
         probs = np.exp(logits)
@@ -99,9 +98,7 @@ class ClasificadorFineTuned:
         self._torch = torch
         self.max_len = max_len
         print(f"[classifier] Cargando modelo fine-tuneado de {model_path} ...")
-        # Los checkpoints del Trainer no siempre guardan el tokenizer. Ojo: cargarlo
-        # de un dir sin vocab NO lanza excepcion, devuelve uno vacio (vocab_size~5)
-        # que tokeniza todo como <unk> -> hay que validar el vocabulario.
+        # si el checkpoint no trae vocab, from_pretrained devuelve un tokenizer vacio
         self.tok = None
         try:
             t = AutoTokenizer.from_pretrained(model_path)
@@ -117,12 +114,12 @@ class ClasificadorFineTuned:
         self.model.eval()
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model.to(self.device)
-        # el config puede traer las claves como str ('0') o int (0) -> normaliza a int
+        # claves de id2label llegan como str desde el json
         self.id2label = {int(k): v for k, v in self.model.config.id2label.items()}
         print(f"[classifier] Listo en {self.device}  ({len(self.id2label)} clases).")
 
     def entrenar_desde_bd(self) -> "ClasificadorFineTuned":
-        return self  # ya viene entrenado
+        return self
 
     def classify(self, texto: str) -> Prediccion:
         torch = self._torch

@@ -51,8 +51,7 @@ def main() -> None:
         cur = con.cursor()
         run_sql_file(cur, config.SQL_DIR / "01_schema.sql")
         con.commit()
-        # Las categorias se derivan del corpus en src/ingest.py (dataset-agnostico).
-        # 02_seed.sql queda como referencia ilustrativa de SUNAFIL, no se ejecuta aqui.
+        # las categorias las crea ingest.py desde el corpus; 02_seed.sql es solo referencia
         print("  OK. Esquema creado (tablas, tipo VECTOR, intento de indice vectorial).")
     finally:
         con.close()

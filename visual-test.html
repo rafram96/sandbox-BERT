@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SUN · Clasificación inteligente</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+    :root {
+      --ink: #17231e;
+      --muted: #69736e;
+      --paper: #f4f1e9;
+      --card: #fffefa;
+      --line: #dcd9cf;
+      --green: #0b6250;
+      --green-2: #16856e;
+      --mint: #dcece6;
+      --lime: #dbe86a;
+      --amber: #dc9a25;
+      --red: #ba4d3f;
+      --shadow: 0 20px 55px rgba(27, 44, 36, .09);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 78% 4%, rgba(219, 232, 106, .25), transparent 22rem),
+        linear-gradient(90deg, rgba(23,35,30,.026) 1px, transparent 1px),
+        var(--paper);
+      background-size: auto, 42px 42px, auto;
+      font-family: Manrope, "Segoe UI", sans-serif;
+    }
+
+    button, textarea, input { font: inherit; }
+    button { color: inherit; }
+
+    .shell { display: grid; grid-template-columns: 248px 1fr; min-height: 100vh; }
+    .sidebar {
+      position: sticky; top: 0; height: 100vh;
+      padding: 28px 22px;
+      display: flex; flex-direction: column;
+      color: #f7f3e9; background: var(--ink);
+    }
+
+    .brand { display: flex; gap: 12px; align-items: center; margin: 0 4px 44px; }
+    .brand-mark {
+      width: 38px; height: 38px; display: grid; place-items: center;
+      border-radius: 50%; color: var(--ink); background: var(--lime);
+      font: 800 15px Manrope, sans-serif;
+      box-shadow: 0 0 0 5px rgba(219,232,106,.12);
+    }
+    .brand strong { display: block; font-size: 15px; letter-spacing: .04em; }
+    .brand small { color: #9da8a2; font-size: 10px; text-transform: uppercase; letter-spacing: .15em; }
+
+    .eyebrow { font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--muted); }
+    .sidebar .eyebrow { color: #728078; margin: 0 12px 10px; }
+    .nav { display: grid; gap: 5px; }
+    .nav button {
+      border: 0; padding: 12px; border-radius: 9px; text-align: left;
+      background: transparent; color: #aeb8b2; cursor: pointer;
+      transition: .2s ease;
+    }
+    .nav button:hover { color: white; background: rgba(255,255,255,.06); }
+    .nav button.active { color: white; background: rgba(219,232,106,.12); }
+    .nav button span { display: inline-grid; width: 25px; color: var(--lime); }
+
+    .system-card {
+      margin-top: auto; border: 1px solid rgba(255,255,255,.1); border-radius: 13px;
+      padding: 15px; background: rgba(255,255,255,.035);
+    }
+    .status { display: flex; gap: 8px; align-items: center; font-size: 12px; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #5cd29e; box-shadow: 0 0 0 5px rgba(92,210,158,.1); }
+    .system-card p { color: #8f9a94; font-size: 10px; line-height: 1.5; margin: 10px 0 0; }
+
+    main { min-width: 0; padding: 26px clamp(24px, 5vw, 70px) 64px; }
+    .topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 44px; }
+    .crumb { color: var(--muted); font-size: 12px; }
+    .crumb b { color: var(--ink); }
+    .user { display: flex; align-items: center; gap: 11px; font-size: 12px; }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--green); color: white; font-weight: 700; }
+
+    .hero { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(270px, .75fr); gap: 45px; align-items: end; margin-bottom: 32px; }
+    h1 { font: 400 clamp(38px, 5vw, 66px)/.96 "DM Serif Display", Georgia, serif; letter-spacing: -.035em; margin: 0; max-width: 740px; }
+    h1 em { color: var(--green); font-weight: 400; }
+    .hero-copy { color: var(--muted); font-size: 13px; line-height: 1.8; max-width: 420px; margin: 0 0 4px; }
+
+    .workspace { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(310px, .65fr); gap: 18px; }
+    .card { border: 1px solid var(--line); border-radius: 18px; background: rgba(255,254,250,.88); box-shadow: var(--shadow); }
+    .entry { padding: 26px; }
+    .card-head { display: flex; justify-content: space-between; align-items: start; gap: 18px; margin-bottom: 20px; }
+    h2 { margin: 5px 0 0; font-size: 19px; letter-spacing: -.02em; }
+    .tag { border-radius: 99px; padding: 7px 11px; background: var(--mint); color: var(--green); font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; white-space: nowrap; }
+
+    .dropzone {
+      position: relative; border: 1px dashed #aeb7b1; border-radius: 13px; padding: 16px;
+      display: flex; gap: 13px; align-items: center; cursor: pointer; transition: .2s ease;
+      background: #faf9f4;
+    }
+    .dropzone:hover, .dropzone.drag { border-color: var(--green-2); background: #f2f8f5; transform: translateY(-1px); }
+    .drop-icon { width: 38px; height: 38px; display: grid; place-items: center; border-radius: 10px; background: var(--mint); color: var(--green); font-size: 20px; }
+    .dropzone strong { display: block; font-size: 12px; }
+    .dropzone small { display: block; color: var(--muted); font-size: 10px; margin-top: 3px; }
+    #file { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+    .divider { display: flex; align-items: center; gap: 12px; margin: 15px 0; color: #9aa29e; font-size: 9px; font-weight: 800; letter-spacing: .12em; }
+    .divider::before, .divider::after { content: ""; height: 1px; background: var(--line); flex: 1; }
+    textarea {
+      width: 100%; min-height: 170px; resize: vertical; border: 1px solid var(--line); border-radius: 13px;
+      padding: 17px; outline: 0; background: #fff; color: var(--ink); line-height: 1.65; font-size: 12px;
+      transition: border .2s, box-shadow .2s;
+    }
+    textarea:focus { border-color: var(--green-2); box-shadow: 0 0 0 4px rgba(22,133,110,.09); }
+    .entry-foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 15px; }
+    .count { color: var(--muted); font-size: 10px; }
+    .primary {
+      border: 0; border-radius: 10px; padding: 12px 19px; cursor: pointer;
+      background: var(--ink); color: white; font-size: 11px; font-weight: 800; letter-spacing: .03em;
+      box-shadow: 0 8px 18px rgba(23,35,30,.18); transition: .2s ease;
+    }
+    .primary:hover { transform: translateY(-2px); background: var(--green); }
+    .primary:disabled { opacity: .6; cursor: progress; transform: none; }
+
+    .result { overflow: hidden; display: flex; flex-direction: column; }
+    .result-top { padding: 25px 25px 18px; background: var(--green); color: white; }
+    .result-top .eyebrow { color: #9ed3c4; }
+    .result-top h2 { font: 400 29px/1.05 "DM Serif Display", Georgia, serif; margin: 9px 0 20px; }
+    .confidence { display: flex; align-items: center; justify-content: space-between; gap: 14px; font-size: 10px; }
+    .bar { flex: 1; height: 5px; border-radius: 10px; background: rgba(255,255,255,.18); overflow: hidden; }
+    .bar i { display: block; width: 92%; height: 100%; border-radius: inherit; background: var(--lime); transition: width .7s cubic-bezier(.2,.8,.2,1); }
+    .result-body { padding: 22px 25px 25px; flex: 1; }
+    .route { display: flex; align-items: center; gap: 11px; padding-bottom: 18px; border-bottom: 1px solid var(--line); }
+    .route-icon { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--mint); color: var(--green); }
+    .route strong { font-size: 11px; display: block; }
+    .route small { color: var(--muted); font-size: 9px; }
+    .facts { display: grid; gap: 14px; margin-top: 19px; }
+    .fact { display: flex; justify-content: space-between; gap: 14px; font-size: 10px; }
+    .fact span:first-child { color: var(--muted); }
+    .fact b { text-align: right; }
+    .review { margin-top: 20px; padding: 12px; border-radius: 10px; background: #f4f0dc; color: #755a19; font-size: 10px; line-height: 1.5; }
+
+    .flow { grid-column: 1 / -1; padding: 22px 26px; box-shadow: none; }
+    .flow-row { display: grid; grid-template-columns: repeat(4, 1fr); margin-top: 20px; }
+    .step { position: relative; padding-right: 25px; }
+    .step:not(:last-child)::after { content: "→"; position: absolute; right: 12px; top: 8px; color: #a8b0ab; }
+    .step-num { width: 27px; height: 27px; border-radius: 50%; display: grid; place-items: center; background: var(--ink); color: white; font-size: 9px; font-weight: 800; margin-bottom: 9px; }
+    .step.active .step-num { background: var(--lime); color: var(--ink); box-shadow: 0 0 0 6px rgba(219,232,106,.2); }
+    .step strong { display: block; font-size: 10px; }
+    .step small { color: var(--muted); font-size: 9px; }
+
+    .toast { position: fixed; right: 25px; bottom: 25px; padding: 13px 16px; border-radius: 10px; color: white; background: var(--ink); font-size: 11px; box-shadow: var(--shadow); transform: translateY(30px); opacity: 0; pointer-events: none; transition: .3s ease; }
+    .toast.show { transform: translateY(0); opacity: 1; }
+    .pulse { animation: pulse .75s ease both; }
+    @keyframes pulse { 45% { opacity: .45; transform: translateY(3px); } }
+    @keyframes rise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+    .hero, .workspace { animation: rise .7s ease both; }
+    .workspace { animation-delay: .09s; }
+
+    @media (max-width: 900px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; padding: 16px 20px; flex-direction: row; align-items: center; }
+      .brand { margin: 0; }
+      .nav, .system-card, .sidebar .eyebrow { display: none; }
+      main { padding: 24px 20px 50px; }
+      .hero, .workspace { grid-template-columns: 1fr; }
+      .hero { gap: 16px; }
+      .flow { grid-column: auto; overflow-x: auto; }
+      .flow-row { min-width: 620px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">SUN</div>
+        <div><strong>Clasifica</strong><small>Laboratorio IA</small></div>
+      </div>
+      <div class="eyebrow">Operaciones</div>
+      <nav class="nav" aria-label="Navegación principal">
+        <button class="active"><span>⌁</span> Clasificar documento</button>
+        <button><span>◫</span> Expedientes</button>
+        <button><span>◎</span> Revisión humana</button>
+        <button><span>⌇</span> Métricas</button>
+      </nav>
+      <div class="system-card">
+        <div class="status"><i class="dot"></i><strong>Servicios disponibles</strong></div>
+        <p>Oracle 23ai · XLM-RoBERTa<br>Ollama · RAG Top-5</p>
+      </div>
+    </aside>
+
+    <main>
+      <header class="topbar">
+        <div class="crumb">Mesa de partes / <b>Nueva clasificación</b></div>
+        <div class="user"><span>Analista de turno</span><div class="avatar">AM</div></div>
+      </header>
+
+      <section class="hero">
+        <div>
+          <div class="eyebrow">Inteligencia documental</div>
+          <h1>Del expediente a una decisión <em>trazable.</em></h1>
+        </div>
+        <p class="hero-copy">Clasifica documentos automáticamente y deriva los casos ambiguos a un análisis enriquecido con contexto, manteniendo el control humano donde importa.</p>
+      </section>
+
+      <section class="workspace">
+        <article class="card entry">
+          <div class="card-head">
+            <div><div class="eyebrow">01 · Entrada</div><h2>Documento por analizar</h2></div>
+            <span class="tag">Prueba visual</span>
+          </div>
+
+          <label class="dropzone" id="dropzone">
+            <span class="drop-icon">↥</span>
+            <span><strong id="fileLabel">Arrastra un archivo o selecciónalo</strong><small>PDF, TXT o JSON · máximo 20 MB</small></span>
+            <input id="file" type="file" accept=".pdf,.txt,.json,.jsonl">
+          </label>
+
+          <div class="divider">O PEGA EL CONTENIDO</div>
+          <textarea id="documentText" aria-label="Contenido del documento">Profesional de tecnología con ocho años de experiencia en desarrollo backend con Python, diseño de APIs, procesamiento de datos y despliegue de servicios en la nube. Lideré la automatización de reportes y la migración de aplicaciones empresariales.</textarea>
+          <div class="entry-foot">
+            <span class="count"><b id="charCount">0</b> caracteres · análisis local simulado</span>
+            <button class="primary" id="analyze">Analizar documento&nbsp; →</button>
+          </div>
+        </article>
+
+        <aside class="card result" id="resultCard">
+          <div class="result-top">
+            <div class="eyebrow">Clasificación sugerida</div>
+            <h2 id="category">PYTHON_DEVELOPER</h2>
+            <div class="confidence"><span>Confianza</span><div class="bar"><i id="confidenceBar"></i></div><b id="confidence">92%</b></div>
+          </div>
+          <div class="result-body">
+            <div class="route">
+              <span class="route-icon" id="routeIcon">✓</span>
+              <span><strong id="routeName">Ruta rápida</strong><small id="routeDetail">Supera el umbral de 0.90</small></span>
+            </div>
+            <div class="facts">
+              <div class="fact"><span>Modelo</span><b>XLM-RoBERTa</b></div>
+              <div class="fact"><span>Idioma detectado</span><b>Español</b></div>
+              <div class="fact"><span>RAG / vecinos</span><b id="ragValue">No requerido</b></div>
+              <div class="fact"><span>Etiqueta final</span><b id="finalLabel">PYTHON_DEVELOPER</b></div>
+            </div>
+            <div class="review" id="reviewNote">✓ Decisión automática. No requiere revisión humana.</div>
+          </div>
+        </aside>
+
+        <section class="card flow">
+          <div class="card-head">
+            <div><div class="eyebrow">Trazabilidad</div><h2>Ruta de decisión</h2></div>
+            <span class="tag" id="duration">1.8 segundos</span>
+          </div>
+          <div class="flow-row">
+            <div class="step active"><div class="step-num">01</div><strong>Documento</strong><small>Texto normalizado</small></div>
+            <div class="step active"><div class="step-num">02</div><strong>Clasificador</strong><small>43 categorías</small></div>
+            <div class="step active" id="gateStep"><div class="step-num">03</div><strong>Puerta de confianza</strong><small id="gateText">0.92 ≥ 0.90</small></div>
+            <div class="step active" id="decisionStep"><div class="step-num">04</div><strong id="decisionTitle">Persistencia</strong><small id="decisionText">Oracle 23ai</small></div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+  <div class="toast" id="toast">Clasificación completada</div>
+
+  <script>
+    const text = document.querySelector('#documentText');
+    const count = document.querySelector('#charCount');
+    const button = document.querySelector('#analyze');
+    const file = document.querySelector('#file');
+    const dropzone = document.querySelector('#dropzone');
+    const result = document.querySelector('#resultCard');
+    const toast = document.querySelector('#toast');
+
+    function updateCount() { count.textContent = text.value.length.toLocaleString('es-PE'); }
+    updateCount();
+    text.addEventListener('input', updateCount);
+
+    ['dragenter', 'dragover'].forEach(type => dropzone.addEventListener(type, () => dropzone.classList.add('drag')));
+    ['dragleave', 'drop'].forEach(type => dropzone.addEventListener(type, () => dropzone.classList.remove('drag')));
+
+    file.addEventListener('change', async () => {
+      const selected = file.files[0];
+      if (!selected) return;
+      document.querySelector('#fileLabel').textContent = selected.name;
+      if (/\.(txt|json|jsonl)$/i.test(selected.name)) {
+        text.value = await selected.text();
+        updateCount();
+      }
+    });
+
+    function infer(value) {
+      const t = value.toLowerCase();
+      const options = [
+        [/python|django|flask|pandas|backend/, 'PYTHON_DEVELOPER'],
+        [/react|javascript|typescript|frontend/, 'REACT_DEVELOPER'],
+        [/sql|oracle|base de datos|database/, 'DATABASE'],
+        [/contab|auditor|tribut|finanz/, 'ACCOUNTANT'],
+        [/recursos humanos|selección|talento|planilla/, 'HUMAN_RESOURCES'],
+        [/venta|comercial|clientes/, 'SALES'],
+        [/abog|legal|derecho|litig/, 'ADVOCATE'],
+        [/arquitect|autocad|edific/, 'ARCHITECT']
+      ];
+      const hit = options.find(([pattern]) => pattern.test(t));
+      const category = hit ? hit[1] : 'BUSINESS_ANALYST';
+      const signals = options.filter(([pattern]) => pattern.test(t)).length;
+      const confidence = hit ? Math.min(.96, .87 + signals * .05) : .68;
+      return { category, confidence };
+    }
+
+    button.addEventListener('click', () => {
+      if (!text.value.trim()) { text.focus(); return; }
+      button.disabled = true;
+      button.textContent = 'Analizando…';
+      result.classList.remove('pulse');
+      void result.offsetWidth;
+      result.classList.add('pulse');
+
+      setTimeout(() => {
+        const prediction = infer(text.value);
+        const pct = Math.round(prediction.confidence * 100);
+        const fast = prediction.confidence >= .90;
+        document.querySelector('#category').textContent = prediction.category;
+        document.querySelector('#finalLabel').textContent = prediction.category;
+        document.querySelector('#confidence').textContent = pct + '%';
+        document.querySelector('#confidenceBar').style.width = pct + '%';
+        document.querySelector('#routeIcon').textContent = fast ? '✓' : '↗';
+        document.querySelector('#routeName').textContent = fast ? 'Ruta rápida' : 'Escalado RAG + LLM';
+        document.querySelector('#routeDetail').textContent = fast ? 'Supera el umbral de 0.90' : 'Confianza inferior al umbral';
+        document.querySelector('#ragValue').textContent = fast ? 'No requerido' : 'Top-5 consultados';
+        document.querySelector('#reviewNote').textContent = fast
+          ? '✓ Decisión automática. No requiere revisión humana.'
+          : '⚑ El caso queda marcado para revisión humana (regla 6.3).';
+        document.querySelector('#gateText').textContent = prediction.confidence.toFixed(2) + (fast ? ' ≥ ' : ' < ') + '0.90';
+        document.querySelector('#decisionTitle').textContent = fast ? 'Persistencia' : 'RAG + LLM';
+        document.querySelector('#decisionText').textContent = fast ? 'Oracle 23ai' : 'Top-K y decisión asistida';
+        document.querySelector('#duration').textContent = (1.2 + Math.random() * 1.7).toFixed(1) + ' segundos';
+        button.disabled = false;
+        button.innerHTML = 'Analizar documento&nbsp; →';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2400);
+      }, 780);
+    });
+  </script>
+</body>
+</html>

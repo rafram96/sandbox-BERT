@@ -65,7 +65,7 @@ def _traducir_una(fila: dict, model: str, max_chars: int):
     try:
         fila["texto"] = traducir(fila["texto"], model, max_chars)
         return fila, None
-    except Exception as e:  # deja el texto original si Ollama falla
+    except Exception as e:
         return fila, type(e).__name__
 
 

@@ -24,8 +24,7 @@ from PIL import Image
 
 from .. import config
 
-# 1 hilo de OpenMP por proceso: evita que Tesseract se sobre-suscriba cuando
-# lo paralelizamos a nivel de proceso (los workers heredan este env en spawn).
+# 1 hilo de OpenMP por proceso; los workers heredan el env en spawn
 os.environ.setdefault("OMP_THREAD_LIMIT", "1")
 
 
@@ -40,7 +39,7 @@ def _configurar_tesseract() -> None:
             return
 
 
-_configurar_tesseract()  # aplica en el proceso principal y en cada worker (spawn reimporta)
+_configurar_tesseract()
 
 
 def verificar_tesseract() -> str:
@@ -48,7 +47,7 @@ def verificar_tesseract() -> str:
     _configurar_tesseract()
     try:
         return str(pytesseract.get_tesseract_version())
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         raise SystemExit(
             "\nERROR: Tesseract no esta disponible; abortando antes de hacer OCR.\n"
             "  - Instalar:  winget install UB-Mannheim.TesseractOCR\n"
@@ -56,7 +55,7 @@ def verificar_tesseract() -> str:
             f"  Detalle: {type(e).__name__}: {e}"
         )
 
-# --- Normalizacion de categorias -------------------------------------------
+################# Normalizacion de categorias
 _ALIAS = {
     "hr": "human resources", "it": "information technology", "datascience": "data science",
     "nse": "network security engineer", "dot": "dotnet developer", "dot net developer": "dotnet developer",
@@ -75,7 +74,7 @@ _ALIAS = {
 
 def normalizar_categoria(folder: str) -> str:
     s = folder.replace("_", " ")
-    s = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", s).lower()   # parte camelCase
+    s = re.sub(r"(?<=[a-z])(?=[A-Z])", " ", s).lower()
     s = re.sub(r"\bresumes?\b", " ", s)                    # quita 'resume'/'resumes'
     s = re.sub(r"\s+", " ", s).strip()
     return _ALIAS.get(s, s)
@@ -86,7 +85,7 @@ def etiqueta(cat: str) -> str:
     return re.sub(r"[^A-Z0-9]+", "_", cat.upper()).strip("_")
 
 
-# --- OCR --------------------------------------------------------------------
+################# OCR
 def ocr_pdf(data: bytes, dpi: int, max_pages: int) -> str:
     doc = fitz.open(stream=data, filetype="pdf")
     try:
@@ -100,8 +99,8 @@ def ocr_pdf(data: bytes, dpi: int, max_pages: int) -> str:
     return re.sub(r"\s+", " ", " ".join(partes)).strip()
 
 
-# --- OCR paralelo (pool de procesos) ----------------------------------------
-_ZIP = None  # zip abierto una vez por worker (no se comparte entre procesos)
+################# OCR paralelo
+_ZIP = None
 
 
 def _init_worker(zip_path: str) -> None:
@@ -117,11 +116,11 @@ def _ocr_task(args):
     try:
         txt = ocr_pdf(_ZIP.read(member), dpi, max_pages)
         return (member, lbl, txt, None)
-    except Exception as e:  # noqa: BLE001
+    except Exception as e:
         return (member, lbl, None, type(e).__name__)
 
 
-# --- Carga ------------------------------------------------------------------
+################# Carga
 def cargar(zip_path: str, per_cat: int = 35, train_frac: float = 0.7, dpi: int = 200,
            max_pages: int = 2, min_chars: int = 120, min_cat: int = 15,
            workers: int = 1) -> dict:
@@ -138,12 +137,10 @@ def cargar(zip_path: str, per_cat: int = 35, train_frac: float = 0.7, dpi: int =
     z.close()
     cats = {c: sorted(v) for c, v in por_cat.items() if len(v) >= min_cat}
 
-    # plan de tareas: los primeros per_cat PDFs de cada categoria
     tareas = [(ruta, etiqueta(cat), dpi, max_pages)
               for cat, rutas in sorted(cats.items()) for ruta in rutas[:per_cat]]
     print(f"Categorias: {len(cats)}  |  PDFs a OCR: {len(tareas)}  |  workers: {workers}")
 
-    # OCR
     total = len(tareas)
     t0 = time.time()
 
@@ -171,7 +168,6 @@ def cargar(zip_path: str, per_cat: int = 35, train_frac: float = 0.7, dpi: int =
 
     ocr_seg = time.time() - t0
 
-    # agrupa por categoria, filtra fallos/texto corto
     por_lbl = defaultdict(list)
     errores = []  # {ruta, motivo}
     for member, lbl, txt, err in resultados:
@@ -182,7 +178,6 @@ def cargar(zip_path: str, per_cat: int = 35, train_frac: float = 0.7, dpi: int =
         else:
             por_lbl[lbl].append((member, txt))
 
-    # split estratificado train/test (determinista: ordenado por member)
     kb_path = config.ROOT / "data" / "resumes_kb.jsonl"
     test_path = config.ROOT / "data" / "resumes_test.jsonl"
     n_kb = n_test = 0

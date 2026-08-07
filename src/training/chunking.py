@@ -35,8 +35,7 @@ def _load(path: str, limit: int):
 
 
 def _cargar_tokenizer(model_path: str, base: str):
-    # un tokenizer cargado de un dir sin vocab NO falla: devuelve uno vacio
-    # (vocab_size ~5) que tokeniza todo como <unk> -> hay que validarlo.
+    # si el dir no trae vocab, from_pretrained devuelve un tokenizer vacio
     try:
         tok = AutoTokenizer.from_pretrained(model_path)
         if tok.vocab_size >= 1000:
@@ -86,7 +85,7 @@ def main() -> None:
     model.eval()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model.to(device)
-    # el config trae las claves de id2label como str desde el JSON -> normaliza a int
+    # claves de id2label llegan como str desde el json
     id2label = {int(k): v for k, v in model.config.id2label.items()}
 
     cls_id = tok.cls_token_id if tok.cls_token_id is not None else tok.bos_token_id

@@ -38,7 +38,7 @@ def _load(path: str, text_key: str, label_key: str):
     coerced = dropped = 0
     for r in rows:
         t = r.get(text_key)
-        if not isinstance(t, str):       # lista/null/numero -> a string
+        if not isinstance(t, str):
             coerced += 1
             t = " ".join(map(str, t)) if isinstance(t, list) else ("" if t is None else str(t))
         t = t.strip()
@@ -60,7 +60,6 @@ class CVDataset(Dataset):
 
     def __getitem__(self, i):
         texto, label = self.pairs[i]
-        # padding a longitud fija -> todos los samples uniformes, sin padding dinamico
         enc = self.tok(str(texto), truncation=True, max_length=self.max_len,
                        padding="max_length")
         return {
@@ -96,8 +95,7 @@ def main() -> None:
           f"GPU={'si' if torch.cuda.is_available() else 'NO (sera lento)'}")
 
     tok = AutoTokenizer.from_pretrained(args.model)
-    # ModernBERT usa torch.compile/Triton internamente (reference_compile); en Windows
-    # Triton no anda y el backward se vuelve lentisimo -> lo desactivamos via config.
+    # reference_compile usa Triton, que no funciona en Windows
     config = AutoConfig.from_pretrained(
         args.model, num_labels=len(labels), id2label=id2l, label2id=l2id)
     if hasattr(config, "reference_compile"):
@@ -123,7 +121,7 @@ def main() -> None:
         save_total_limit=1,
         load_best_model_at_end=True,
         metric_for_best_model="accuracy",
-        fp16=torch.cuda.is_available(),   # mixed precision en GPU (Turing+): mas rapido
+        fp16=torch.cuda.is_available(),
         logging_steps=50,
         report_to="none",
     )

@@ -74,7 +74,6 @@ def _construir_prompt(texto: str, categoria_base: str, score_base: float,
 
 def _match_label(respuesta: str, candidatas: List[str]) -> str | None:
     r = respuesta.strip().upper()
-    # match exacto o por contencion de codigo
     for c in candidatas:
         if c.upper() == r:
             return c
@@ -89,7 +88,7 @@ def decidir(texto: str, categoria_base: str, score_base: float,
     if config.USE_MOCK_LLM:
         return _mock(categoria_base, score_base, vecinos)
 
-    # candidatas = prediccion base + categorias distintas del Top-K (acota la eleccion)
+    # candidatas: prediccion base + categorias del top-k
     candidatas = []
     for c in [categoria_base] + [v.categoria for v in vecinos]:
         if c and c not in candidatas:
@@ -100,7 +99,6 @@ def decidir(texto: str, categoria_base: str, score_base: float,
         respuesta = _ollama_generate(prompt)
         elegido = _match_label(respuesta, candidatas)
         if elegido is None:
-            # el LLM no devolvio una etiqueta valida -> confia en la base
             return DecisionLLM(
                 etiqueta_final=categoria_base,
                 justificacion=f"[llm sin etiqueta valida: {respuesta.strip()[:60]!r}] -> base",
@@ -112,7 +110,7 @@ def decidir(texto: str, categoria_base: str, score_base: float,
             justificacion=f"[llm {config.OLLAMA_MODEL}] {coincide} -> {elegido}",
             puntajes={},
         )
-    except Exception as e:  # (Ollama caido, timeout, etc.)
+    except Exception as e:
         m = _mock(categoria_base, score_base, vecinos)
         m.justificacion = f"[llm error: {type(e).__name__}] fallback {m.justificacion}"
         return m

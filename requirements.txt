@@ -6,6 +6,9 @@ numpy>=1.26
 torch>=2.2.0
 transformers>=4.48.0
 accelerate>=1.1.0
+sentencepiece>=0.2.0
+sacremoses>=0.1.1
+tqdm>=4.66.0
 
 ################# PDF y OCR
 pypdf>=4.0
