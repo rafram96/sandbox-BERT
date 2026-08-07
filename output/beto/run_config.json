@@ -1,0 +1,19 @@
+{
+  "train": "data/espanol/resumes_kb_es_full.jsonl",
+  "test": "data/espanol/resumes_test_es_full.jsonl",
+  "output": "output/beto",
+  "model": "dccuchile/bert-base-spanish-wwm-cased",
+  "max_len": 512,
+  "stride": 64,
+  "validation_ratio": 0.1,
+  "seed": 42,
+  "epochs": 10,
+  "patience": 2,
+  "batch": 8,
+  "eval_batch": 16,
+  "gradient_accumulation": 2,
+  "lr": 2e-05,
+  "prepare_only": true,
+  "skip_direct": false,
+  "skip_chunked": false
+}

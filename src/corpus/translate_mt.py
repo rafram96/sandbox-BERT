@@ -73,7 +73,7 @@ def segmentar_por_tokens(texto: str, tokenizer, max_tokens: int) -> list[str]:
     actual: list[int] = []
 
     for unidad in _unidades_texto(str(texto)):
-        ids = tokenizer.encode(unidad, add_special_tokens=False)
+        ids = tokenizer.encode(unidad, add_special_tokens=False, verbose=False)
         if not ids:
             continue
 
@@ -92,8 +92,19 @@ def segmentar_por_tokens(texto: str, tokenizer, max_tokens: int) -> list[str]:
     if actual:
         segmentos_ids.append(actual)
 
+    # Evita tokenizer.decode(), que falla de forma intermitente en transformers
+    # 4.48.x. No se pasan los ids directamente a spm_source: Marian usa un
+    # vocabulario combinado cuyos ids no coinciden con los ids internos de SPM.
+    if hasattr(tokenizer, "convert_tokens_to_string"):
+        return [
+            tokenizer.convert_tokens_to_string(
+                tokenizer.convert_ids_to_tokens([int(token_id) for token_id in ids])
+            ).strip()
+            for ids in segmentos_ids
+            if ids
+        ]
     return [
-        tokenizer.decode(ids, skip_special_tokens=True).strip()
+        tokenizer.decode([int(token_id) for token_id in ids], skip_special_tokens=True).strip()
         for ids in segmentos_ids
         if ids
     ]

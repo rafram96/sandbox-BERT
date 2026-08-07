@@ -4,7 +4,7 @@ oracledb>=2.4.0
 ################# ML & Embeddings
 numpy>=1.26
 torch>=2.2.0
-transformers>=4.48.0
+transformers>=4.57.6,<5
 accelerate>=1.1.0
 sentencepiece>=0.2.0
 sacremoses>=0.1.1

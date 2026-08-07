@@ -7,3 +7,6 @@ venv/
 # modelos fine-tuneados (pesados, se regeneran con finetune.py)
 ft-model/
 ft-*/
+# checkpoints/modelos pesados; metricas CSV/JSON de output si se conservan
+output/**/models/
+output/**/checkpoints/

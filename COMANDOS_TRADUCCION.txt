@@ -1,0 +1,2 @@
+py -m src.corpus.translate_mt --in "data\servidor\traducciones\resumes_kb.jsonl" --out "data\servidor\traducciones\resumes_kb_es_full.jsonl" --device cuda --batch 16 --beams 1
+py -m src.corpus.translate_mt --in "data\servidor\traducciones\resumes_test.jsonl" --out "data\servidor\traducciones\resumes_test_es_full.jsonl" --device cuda --batch 16 --beams 1
