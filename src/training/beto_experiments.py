@@ -115,9 +115,12 @@ def _write_jsonl(path: Path, rows: Iterable[dict]) -> None:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
 
 
-def _seed_everything(seed: int) -> None:
+def _seed_cpu(seed: int) -> None:
     random.seed(seed)
     np.random.seed(seed)
+
+
+def _seed_torch(seed: int) -> None:
     torch.manual_seed(seed)
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
@@ -464,7 +467,10 @@ def main() -> None:
     parser.add_argument("--skip-chunked", action="store_true")
     args = parser.parse_args()
 
-    _seed_everything(args.seed)
+    # La preparacion es completamente CPU. No inicializamos CUDA hasta despues
+    # de tokenizar y de atender --prepare-only; esto tambien permite distinguir
+    # fallos del corpus de fallos nativos del controlador/CUDA.
+    _seed_cpu(args.seed)
     output_root = Path(args.output)
     output_root.mkdir(parents=True, exist_ok=True)
     train_path = Path(args.train)
@@ -475,7 +481,11 @@ def main() -> None:
     if set(doc.etiqueta for doc in test_docs) - set(labels):
         raise ValueError("El test contiene categorias ausentes en entrenamiento")
     label2id = {label: i for i, label in enumerate(labels)}
-    tokenizer = AutoTokenizer.from_pretrained(args.model)
+    # El tokenizador rapido puede provocar una violacion de acceso nativa
+    # (0xC0000005) en algunas instalaciones de Windows. El tokenizador Python
+    # es ligeramente mas lento al preparar los datos, pero es estable y genera
+    # la misma tokenizacion WordPiece para BETO.
+    tokenizer = AutoTokenizer.from_pretrained(args.model, use_fast=False)
     cls_id, sep_id, pad_id = _special_ids(tokenizer)
     train_tokens = _tokenize_docs(train_docs, tokenizer, "Tokenizando entrenamiento")
     test_tokens = _tokenize_docs(test_docs, tokenizer, "Tokenizando test")
@@ -516,7 +526,9 @@ def main() -> None:
             "maximo_test": max(map(len, test_windows)),
         },
         "categorias": labels,
-        "dispositivo": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU",
+        "dispositivo": "CPU (preparacion)" if args.prepare_only else (
+            torch.cuda.get_device_name(0) if torch.cuda.is_available() else "CPU"
+        ),
     }
     _write_json(output_root / "dataset_manifest.json", manifest)
     _write_json(output_root / "run_config.json", vars(args))
@@ -527,6 +539,7 @@ def main() -> None:
         return
     if not torch.cuda.is_available():
         raise SystemExit("No hay CUDA. Usa --prepare-only o ejecuta el entrenamiento en GPU.")
+    _seed_torch(args.seed)
 
     train_labels = [label2id[doc.etiqueta] for doc in train_docs]
     direct_sequences = _direct_sequences(train_tokens, args.max_len, cls_id, sep_id)
