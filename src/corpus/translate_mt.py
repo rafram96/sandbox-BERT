@@ -6,9 +6,11 @@ Hugging Face y luego puede ejecutarse localmente, incluso en CPU.
 Ejemplos:
 
     py -m src.corpus.translate_mt \
-        --in data/resumes_kb.jsonl --out data/resumes_kb_es_full.jsonl
+        --in data/ingles/resumes_kb_en_full.jsonl \
+        --out data/espanol/resumes_kb_es_full.jsonl
     py -m src.corpus.translate_mt \
-        --in data/resumes_test.jsonl --out data/resumes_test_es_full.jsonl --resume
+        --in data/ingles/resumes_test_en_full.jsonl \
+        --out data/espanol/resumes_test_es_full.jsonl --resume
 
 Solo se traduce el campo ``texto``. Los demas campos del JSON se conservan.
 Los documentos se dividen por tokens (no caracteres) y se reconstruyen sin

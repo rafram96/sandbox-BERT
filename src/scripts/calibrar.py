@@ -4,7 +4,8 @@ Barre umbrales y, para cada uno, mide cobertura y accuracy de la ruta rapida.
 Recomienda el umbral MAS BAJO cuya ruta rapida cumpla el target de accuracy
 (mas cobertura posible sin bajar de esa precision).
 
-    python -m src.scripts.calibrar --test data/resumes_test_es_sub.jsonl [--target 0.95]
+    python -m src.scripts.calibrar \
+        --test data/espanol/resumes_test_es_full.jsonl [--target 0.95]
 """
 from __future__ import annotations
 

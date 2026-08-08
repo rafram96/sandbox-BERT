@@ -23,9 +23,9 @@ ORA_DSN = os.environ.get("ORA_DSN", "localhost:1521/FREEPDB1")
 ################# Flujo
 # Clasificador: "centroide" (embeddings, sin entrenar) | "finetuned" (finetune.py)
 CLASSIFIER_MODE = os.environ.get("CLASSIFIER_MODE", "centroide")
-FT_MODEL_PATH = os.environ.get("FT_MODEL_PATH", "ft-model")
+FT_MODEL_PATH = os.environ.get("FT_MODEL_PATH", "output/beto/models/direct")
 # Tokenizer del modelo fine-tuned; si el checkpoint no lo trae, se usa este (la base).
-FT_TOKENIZER = os.environ.get("FT_TOKENIZER", "xlm-roberta-base")
+FT_TOKENIZER = os.environ.get("FT_TOKENIZER", "dccuchile/bert-base-spanish-wwm-cased")
 
 # Puerta de confianza: "margen" (top1-top2, para centroides) o "softmax" (para finetuned)
 CONFIDENCE_METRIC = os.environ.get("CONFIDENCE_METRIC", "margen")
@@ -46,6 +46,6 @@ OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3:8b-instruct-q4_K_M")
 USE_MOCK_LLM = os.environ.get("USE_MOCK_LLM", "0") == "1"
 
 ################# Rutas de datos
-KB_CORPUS = ROOT / "data" / "kb_corpus.jsonl"
-ENTRANTES = ROOT / "data" / "entrantes.jsonl"
+KB_CORPUS = ROOT / "data" / "demo" / "kb_corpus.jsonl"
+ENTRANTES = ROOT / "data" / "demo" / "entrantes.jsonl"
 SQL_DIR = ROOT / "sql"

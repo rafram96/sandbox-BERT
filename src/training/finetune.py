@@ -1,4 +1,4 @@
-"""Fine-tunea un encoder (ModernBERT / XLM-R / e5) como CLASIFICADOR de CVs.
+"""Fine-tunea un encoder como clasificador de CVs.
 
 Reemplaza el clasificador por centroides por una cabeza de clasificacion entrenada
 de verdad (cross-entropy, backprop). Compara contra el baseline de centroides (~55%).
@@ -6,15 +6,11 @@ de verdad (cross-entropy, backprop). Compara contra el baseline de centroides (~
 Requiere GPU para ser practico. En el server:
     pip install torch transformers numpy          # torch con soporte CUDA
 
-    # Ingles (mas datos, ModernBERT):
-    python -m src.training.finetune --train data/servidor/traducciones/resumes_kb.jsonl \
-                       --test  data/servidor/traducciones/resumes_test.jsonl \
-                       --model answerdotai/ModernBERT-base --epochs 4
-
-    # Espanol (base multilingue):
-    python -m src.training.finetune --train data/resumes_kb_es_sub.jsonl \
-                       --test  data/resumes_test_es_sub.jsonl \
-                       --model xlm-roberta-base --epochs 5
+    python -m src.training.finetune \
+        --train data/espanol/resumes_kb_es_full.jsonl \
+        --test data/espanol/resumes_test_es_full.jsonl \
+        --model mrm8488/longformer-base-4096-spanish \
+        --max-len 4096 --batch 1 --out output/longformer/model
 
 Salida: accuracy en test + modelo guardado en --out (reutilizable en inferencia).
 """

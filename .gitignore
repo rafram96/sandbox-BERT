@@ -1,12 +1,21 @@
-# dataset crudo de Kaggle (2 GB, se descarga aparte)
-data/*.zip
-__pycache__/
-servidor/
+# Configuracion local y entornos
+.env
 venv/
+venv-*/
 .venv/
-# modelos fine-tuneados (pesados, se regeneran con finetune.py)
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Descargas, copias de servidor y registros locales
+data/*.zip
+data/servidor/
+*.log
+
+# Modelos y checkpoints regenerables
 ft-model/
 ft-*/
-# checkpoints/modelos pesados; metricas CSV/JSON de output si se conservan
 output/**/models/
 output/**/checkpoints/
+output/**/execution.log

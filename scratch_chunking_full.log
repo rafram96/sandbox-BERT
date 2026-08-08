@@ -1,11 +1,0 @@
-Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
-Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights: 100%|##########| 201/201 [00:00<00:00, 4632.45it/s]
-docs=2681  clases=43  chunk=64  stride=0  agregacion=mean  paginas=todas  dispositivo=cpu
-
-========================================================
-ACCURACY por chunks (mean): 75.1%
-ACCURACY solo primer chunk:      66.2%
-Diferencia: +9.0 puntos
-Chunks procesados: 10276  (3.8 por documento)
-TIEMPO total: 601.4 s  (0.22 s por documento)
-========================================================

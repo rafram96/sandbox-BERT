@@ -1,3 +1,0 @@
-Resume: 23 documentos ya traducidos.
-Cargando Helsinki-NLP/opus-mt-en-es en cpu...
-Traduciendo 622/645 documentos completos (chunk=400, batch=8, beams=1) -> data\resumes_kb_es_full.jsonl
