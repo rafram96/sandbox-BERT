@@ -1,4 +1,3 @@
-"""Conexion a Oracle 23ai (python-oracledb en modo thin: sin Instant Client)."""
 import array
 import time
 import oracledb
@@ -7,7 +6,7 @@ from .. import config
 
 
 def connect(retries: int = 1, delay: float = 3.0) -> oracledb.Connection:
-    """Abre una conexion. Con retries>1 reintenta (util mientras la BD arranca)."""
+
     last = None
     for intento in range(1, retries + 1):
         try:
@@ -25,7 +24,7 @@ def connect(retries: int = 1, delay: float = 3.0) -> oracledb.Connection:
 
 
 def wait_until_ready(timeout: float = 180.0) -> None:
-    """Bloquea hasta que la BD acepte conexiones o se agote el timeout."""
+
     deadline = time.time() + timeout
     while True:
         try:
@@ -39,5 +38,5 @@ def wait_until_ready(timeout: float = 180.0) -> None:
 
 
 def to_vector(values) -> array.array:
-    """Convierte una lista/np.array de floats al formato que espera el tipo VECTOR."""
+
     return array.array("f", (float(x) for x in values))

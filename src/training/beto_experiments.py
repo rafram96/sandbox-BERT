@@ -1,22 +1,3 @@
-"""Evaluacion reproducible de BETO directo y BETO con chunking.
-
-Genera todos los artefactos bajo ``output/beto`` por defecto:
-
-* separacion estratificada train/validacion (el test nunca selecciona modelos),
-* checkpoint BETO directo (primeros ``max_len`` tokens),
-* checkpoint BETO entrenado con todos los chunks,
-* evaluacion directa en test completo/corto/largo,
-* chunking: primer chunk, Mean/Max y todos/extremos,
-* metricas JSON, resumen CSV, predicciones y matrices de confusion.
-
-Uso en el servidor:
-
-    py -m src.training.beto_experiments
-
-Para comprobar datos y tamanos sin entrenar:
-
-    py -m src.training.beto_experiments --prepare-only
-"""
 from __future__ import annotations
 
 import argparse
@@ -53,7 +34,7 @@ class Documento:
 
 
 class SequenceDataset(Dataset):
-    """Dataset de secuencias ya tokenizadas, con padding fijo."""
+
 
     def __init__(self, sequences: Sequence[Sequence[int]], labels: Sequence[int],
                  pad_id: int, max_len: int):
@@ -467,9 +448,7 @@ def main() -> None:
     parser.add_argument("--skip-chunked", action="store_true")
     args = parser.parse_args()
 
-    # La preparacion es completamente CPU. No inicializamos CUDA hasta despues
-    # de tokenizar y de atender --prepare-only; esto tambien permite distinguir
-    # fallos del corpus de fallos nativos del controlador/CUDA.
+
     _seed_cpu(args.seed)
     output_root = Path(args.output)
     output_root.mkdir(parents=True, exist_ok=True)
@@ -481,10 +460,8 @@ def main() -> None:
     if set(doc.etiqueta for doc in test_docs) - set(labels):
         raise ValueError("El test contiene categorias ausentes en entrenamiento")
     label2id = {label: i for i, label in enumerate(labels)}
-    # El tokenizador rapido puede provocar una violacion de acceso nativa
-    # (0xC0000005) en algunas instalaciones de Windows. El tokenizador Python
-    # es ligeramente mas lento al preparar los datos, pero es estable y genera
-    # la misma tokenizacion WordPiece para BETO.
+
+
     tokenizer = AutoTokenizer.from_pretrained(args.model, use_fast=False)
     cls_id, sep_id, pad_id = _special_ids(tokenizer)
     train_tokens = _tokenize_docs(train_docs, tokenizer, "Tokenizando entrenamiento")

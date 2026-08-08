@@ -1,4 +1,3 @@
-"""Muestra las clasificaciones persistidas en Oracle.  Uso: python -m src.scripts.query_resultados"""
 from ..core import db
 
 

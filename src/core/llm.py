@@ -1,7 +1,3 @@
-"""Escalado: el LLM (Ollama) elige la etiqueta final entre las candidatas.
-
-Con USE_MOCK_LLM=1, o si Ollama falla, cae a un voto ponderado y a la prediccion base.
-"""
 from __future__ import annotations
 
 import json
@@ -22,7 +18,6 @@ class DecisionLLM:
     puntajes: dict
 
 
-################# Fallback mock (voto ponderado por similitud)
 def _mock(categoria_base: str, score_base: float, vecinos: List[Vecino]) -> DecisionLLM:
     puntajes = defaultdict(float)
     for v in vecinos:
@@ -37,7 +32,6 @@ def _mock(categoria_base: str, score_base: float, vecinos: List[Vecino]) -> Deci
     )
 
 
-################# LLM real via Ollama
 def _ollama_generate(prompt: str, timeout: float = 60.0) -> str:
     payload = json.dumps({
         "model": config.OLLAMA_MODEL,
@@ -88,7 +82,7 @@ def decidir(texto: str, categoria_base: str, score_base: float,
     if config.USE_MOCK_LLM:
         return _mock(categoria_base, score_base, vecinos)
 
-    # candidatas: prediccion base + categorias del top-k
+
     candidatas = []
     for c in [categoria_base] + [v.categoria for v in vecinos]:
         if c and c not in candidatas:

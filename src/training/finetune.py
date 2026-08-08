@@ -1,19 +1,3 @@
-"""Fine-tunea un encoder como clasificador de CVs.
-
-Reemplaza el clasificador por centroides por una cabeza de clasificacion entrenada
-de verdad (cross-entropy, backprop). Compara contra el baseline de centroides (~55%).
-
-Requiere GPU para ser practico. En el server:
-    pip install torch transformers numpy          # torch con soporte CUDA
-
-    python -m src.training.finetune \
-        --train data/espanol/resumes_kb_es_full.jsonl \
-        --test data/espanol/resumes_test_es_full.jsonl \
-        --model mrm8488/longformer-base-4096-spanish \
-        --max-len 4096 --batch 1 --out output/longformer/model
-
-Salida: accuracy en test + modelo guardado en --out (reutilizable en inferencia).
-"""
 from __future__ import annotations
 
 import argparse
@@ -85,13 +69,13 @@ def main() -> None:
     labels = sorted({l for _, l in train})
     l2id = {l: i for i, l in enumerate(labels)}
     id2l = {i: l for l, i in l2id.items()}
-    # descarta test con categorias no vistas en train
+
     test = [(t, l) for t, l in test if l in l2id]
     print(f"train={len(train)}  test={len(test)}  clases={len(labels)}  "
           f"GPU={'si' if torch.cuda.is_available() else 'NO (sera lento)'}")
 
     tok = AutoTokenizer.from_pretrained(args.model)
-    # reference_compile usa Triton, que no funciona en Windows
+
     config = AutoConfig.from_pretrained(
         args.model, num_labels=len(labels), id2label=id2l, label2id=l2id)
     if hasattr(config, "reference_compile"):

@@ -1,7 +1,3 @@
-"""Demo end-to-end: bootstrap + ingest + flujo sobre data/entrantes.jsonl.
-
-python -m src.scripts.run_demo [--skip-setup] [--umbral X]
-"""
 from __future__ import annotations
 
 import argparse

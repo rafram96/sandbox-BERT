@@ -1,4 +1,3 @@
-"""Embeddings de texto (encoder ModernBERT, fallback hash). Devuelve vectores L2-normalizados."""
 from __future__ import annotations
 
 import hashlib
@@ -8,7 +7,7 @@ import numpy as np
 
 from .. import config
 
-_backend = None  # se resuelve lazy en la primera llamada
+_backend = None
 
 
 def _l2_normalize(mat: np.ndarray) -> np.ndarray:
@@ -17,12 +16,11 @@ def _l2_normalize(mat: np.ndarray) -> np.ndarray:
     return mat / norms
 
 
-################# Backend
 class ModernBERTBackend:
     name = "ModernBERT"
 
     def __init__(self, model_name: str):
-        import torch  
+        import torch
         from transformers import AutoModel, AutoTokenizer
 
         self._torch = torch
@@ -45,8 +43,8 @@ class ModernBERTBackend:
             ).to(self.device)
             with torch.no_grad():
                 res = self.model(**enc)
-            # mean-pooling ponderado por la mascara de atencion
-            hidden = res.last_hidden_state                 # (b, t, h)
+
+            hidden = res.last_hidden_state
             mask = enc["attention_mask"].unsqueeze(-1).float()
             summed = (hidden * mask).sum(dim=1)
             counts = mask.sum(dim=1).clamp(min=1e-9)
@@ -55,7 +53,6 @@ class ModernBERTBackend:
         return _l2_normalize(np.vstack(out))
 
 
-################# Backend Hash
 class HashBackend:
     name = "hash-fallback"
 
@@ -93,7 +90,7 @@ def backend_name() -> str:
 
 
 def _aplicar_prefijo(textos: List[str], is_query: bool) -> List[str]:
-    """Modelos tipo nomic-embed usan prefijos distintos para doc vs. consulta."""
+
     pref = config.EMBED_QUERY_PREFIX if is_query else config.EMBED_DOC_PREFIX
     if not pref:
         return textos
@@ -101,11 +98,8 @@ def _aplicar_prefijo(textos: List[str], is_query: bool) -> List[str]:
 
 
 def embed(textos: List[str], is_query: bool = False) -> np.ndarray:
-    """Devuelve una matriz (n, dim) L2-normalizada.
 
-    is_query=False -> texto de documento (corpus/KB).
-    is_query=True  -> texto de consulta (documento entrante a clasificar).
-    """
+
     if isinstance(textos, str):
         textos = [textos]
     return _get_backend().embed(_aplicar_prefijo(textos, is_query))

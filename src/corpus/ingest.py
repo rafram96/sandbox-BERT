@@ -1,7 +1,3 @@
-"""Embebe el corpus y recarga kb_documentos. Las categorias salen del corpus.
-
-python -m src.corpus.ingest [--corpus RUTA.jsonl]
-"""
 from __future__ import annotations
 
 import argparse
@@ -22,7 +18,7 @@ def cargar_corpus(path: Path):
 
 
 def _asegurar_categorias(cur, labels) -> dict:
-    """Crea en 'categorias' las que falten y devuelve {codigo: id}."""
+
     cur.execute("SELECT codigo, id FROM categorias")
     cat_id = {codigo: cid for codigo, cid in cur}
     for lbl in sorted(labels):

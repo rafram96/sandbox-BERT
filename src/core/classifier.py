@@ -1,8 +1,3 @@
-"""Clasificadores: por centroide (embeddings) o ModernBERT/XLM-R fine-tuneado.
-
-get_clasificador() elige segun config.CLASSIFIER_MODE ('centroide' | 'finetuned').
-Ambos exponen la misma interfaz: entrenar_desde_bd() y classify(texto) -> Prediccion.
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -17,20 +12,20 @@ from . import db, embeddings
 @dataclass
 class Prediccion:
     categoria: str
-    score: float                 # softmax de la mejor clase (diluye con #clases)
-    ranking: List[Tuple[str, float]]  # (categoria, score) ordenado desc
-    margen: float = 0.0          # coseno top1 - top2 (confianza indep. de #clases)
-    top1_sim: float = 0.0        # coseno crudo al mejor centroide
+    score: float
+    ranking: List[Tuple[str, float]]
+    margen: float = 0.0
+    top1_sim: float = 0.0
 
 
 class ClasificadorLigero:
     def __init__(self, temperatura: float = 0.10):
         self.temperatura = temperatura
         self._codigos: List[str] = []
-        self._centroides: np.ndarray | None = None  # (n_cat, dim)
+        self._centroides: np.ndarray | None = None
 
     def entrenar_desde_bd(self) -> "ClasificadorLigero":
-        """Carga embeddings etiquetados de Oracle y arma los centroides."""
+
         con = db.connect()
         try:
             cur = con.cursor()
@@ -85,11 +80,7 @@ class ClasificadorLigero:
 
 
 class ClasificadorFineTuned:
-    """Carga un modelo fine-tuneado (finetune.py) y clasifica con su cabeza softmax.
 
-    La confianza (score) es la probabilidad softmax de la clase ganadora -> ya es
-    una senal calibrada para la puerta (con CONFIDENCE_METRIC=softmax).
-    """
 
     def __init__(self, model_path: str, max_len: int = 256):
         import torch
@@ -98,7 +89,7 @@ class ClasificadorFineTuned:
         self._torch = torch
         self.max_len = max_len
         print(f"[classifier] Cargando modelo fine-tuneado de {model_path} ...")
-        # si el checkpoint no trae vocab, from_pretrained devuelve un tokenizer vacio
+
         self.tok = None
         try:
             t = AutoTokenizer.from_pretrained(model_path)
@@ -114,7 +105,7 @@ class ClasificadorFineTuned:
         self.model.eval()
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.model.to(self.device)
-        # claves de id2label llegan como str desde el json
+
         self.id2label = {int(k): v for k, v in self.model.config.id2label.items()}
         print(f"[classifier] Listo en {self.device}  ({len(self.id2label)} clases).")
 
@@ -139,7 +130,7 @@ class ClasificadorFineTuned:
 
 
 def get_clasificador():
-    """Factory: devuelve el clasificador segun config.CLASSIFIER_MODE."""
+
     if config.CLASSIFIER_MODE == "finetuned":
         return ClasificadorFineTuned(config.FT_MODEL_PATH)
     return ClasificadorLigero().entrenar_desde_bd()

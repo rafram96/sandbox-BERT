@@ -1,4 +1,3 @@
-"""Ejecuta los .sql de /sql para crear el esquema. python -m src.corpus.bootstrap"""
 from __future__ import annotations
 
 from pathlib import Path
@@ -9,12 +8,8 @@ from ..core import db
 
 
 def split_statements(raw: str) -> List[str]:
-    """Separa un script estilo SQL*Plus en sentencias ejecutables por oracledb.
 
-    Reglas (suficientes para los scripts controlados de este sandbox):
-      - Una linea que contiene solo '/' termina un bloque PL/SQL.
-      - Fuera de un bloque (sin BEGIN acumulado), ';' termina la sentencia.
-    """
+
     stmts: List[str] = []
     buf: List[str] = []
     for line in raw.splitlines():
@@ -22,7 +17,7 @@ def split_statements(raw: str) -> List[str]:
         if st == "/":
             s = "\n".join(buf).strip()
             if s:
-                stmts.append(s)          # bloque PL/SQL: se ejecuta tal cual (con END;)
+                stmts.append(s)
             buf = []
             continue
         buf.append(line)
@@ -30,7 +25,7 @@ def split_statements(raw: str) -> List[str]:
         if "BEGIN" not in joined.upper() and st.endswith(";"):
             s = joined.strip().rstrip(";").strip()
             if s:
-                stmts.append(s)          # sentencia plana: sin ';' final
+                stmts.append(s)
             buf = []
     tail = "\n".join(buf).strip().rstrip(";").strip()
     if tail:
@@ -51,7 +46,7 @@ def main() -> None:
         cur = con.cursor()
         run_sql_file(cur, config.SQL_DIR / "01_schema.sql")
         con.commit()
-        # las categorias las crea ingest.py desde el corpus; 02_seed.sql es solo referencia
+
         print("  OK. Esquema creado (tablas, tipo VECTOR, intento de indice vectorial).")
     finally:
         con.close()

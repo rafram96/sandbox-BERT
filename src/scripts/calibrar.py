@@ -1,12 +1,3 @@
-"""Sugiere el umbral de margen para la puerta de confianza, con datos del test.
-
-Barre umbrales y, para cada uno, mide cobertura y accuracy de la ruta rapida.
-Recomienda el umbral MAS BAJO cuya ruta rapida cumpla el target de accuracy
-(mas cobertura posible sin bajar de esa precision).
-
-    python -m src.scripts.calibrar \
-        --test data/espanol/resumes_test_es_full.jsonl [--target 0.95]
-"""
 from __future__ import annotations
 
 import argparse
@@ -24,7 +15,7 @@ def main() -> None:
 
     clf = get_clasificador()
     filas = [json.loads(l) for l in open(args.test, encoding="utf-8") if l.strip()]
-    rows = []  # (margen, base_correcta)
+    rows = []
     for d in filas:
         p = clf.classify(d["texto"])
         rows.append((p.margen, p.categoria == d["categoria_verdadera"]))

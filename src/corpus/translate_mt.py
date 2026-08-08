@@ -1,21 +1,3 @@
-"""Traduce corpus JSONL completos de ingles a espanol con MarianMT.
-
-No requiere Ollama ni otro servidor. El modelo se descarga una vez desde
-Hugging Face y luego puede ejecutarse localmente, incluso en CPU.
-
-Ejemplos:
-
-    py -m src.corpus.translate_mt \
-        --in data/ingles/resumes_kb_en_full.jsonl \
-        --out data/espanol/resumes_kb_es_full.jsonl
-    py -m src.corpus.translate_mt \
-        --in data/ingles/resumes_test_en_full.jsonl \
-        --out data/espanol/resumes_test_es_full.jsonl --resume
-
-Solo se traduce el campo ``texto``. Los demas campos del JSON se conservan.
-Los documentos se dividen por tokens (no caracteres) y se reconstruyen sin
-descartar ninguna parte del texto.
-"""
 from __future__ import annotations
 
 import argparse
@@ -32,7 +14,7 @@ MAX_MODEL_TOKENS = 512
 
 
 def _cargar(path: Path) -> list[dict]:
-    """Carga un JSONL y muestra la linea exacta si encuentra JSON invalido."""
+
     filas = []
     with path.open(encoding="utf-8") as f:
         for numero, linea in enumerate(f, 1):
@@ -49,7 +31,7 @@ def _cargar(path: Path) -> list[dict]:
 
 
 def _unidades_texto(texto: str) -> Iterable[str]:
-    """Produce parrafos/oraciones para intentar cortar en limites naturales."""
+
     texto = texto.replace("\r\n", "\n").replace("\r", "\n").strip()
     for parrafo in re.split(r"\n\s*\n+", texto):
         parrafo = " ".join(parrafo.split())
@@ -60,12 +42,8 @@ def _unidades_texto(texto: str) -> Iterable[str]:
 
 
 def segmentar_por_tokens(texto: str, tokenizer, max_tokens: int) -> list[str]:
-    """Divide todo el texto sin truncarlo y favorece finales de oracion.
 
-    Una oracion excepcionalmente larga se corta por ids del tokenizer. Al
-    decodificar esos ids puede cambiar espacio en blanco, pero no se elimina
-    contenido util.
-    """
+
     if not 1 <= max_tokens <= MAX_MODEL_TOKENS - 2:
         raise ValueError(
             f"--chunk-tokens debe estar entre 1 y {MAX_MODEL_TOKENS - 2}"
@@ -94,9 +72,7 @@ def segmentar_por_tokens(texto: str, tokenizer, max_tokens: int) -> list[str]:
     if actual:
         segmentos_ids.append(actual)
 
-    # Evita tokenizer.decode(), que falla de forma intermitente en transformers
-    # 4.48.x. No se pasan los ids directamente a spm_source: Marian usa un
-    # vocabulario combinado cuyos ids no coinciden con los ids internos de SPM.
+
     if hasattr(tokenizer, "convert_tokens_to_string"):
         return [
             tokenizer.convert_tokens_to_string(
@@ -117,7 +93,7 @@ def _campos_no_texto(fila: dict) -> dict:
 
 
 def _validar_resume(entrada: list[dict], salida: list[dict], out_path: Path) -> None:
-    """Evita continuar sobre una salida de otra fuente o con orden diferente."""
+
     if len(salida) > len(entrada):
         raise ValueError(f"{out_path} tiene mas filas que el archivo de entrada")
     for indice, (original, traducida) in enumerate(zip(entrada, salida), 1):

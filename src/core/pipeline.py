@@ -1,4 +1,3 @@
-"""Orquesta el flujo (clasificador -> puerta -> RAG+LLM) y persiste en Oracle."""
 from __future__ import annotations
 
 import json
@@ -19,7 +18,7 @@ class Resultado:
     expediente: Optional[str]
     categoria_base: str
     score_base: float
-    ruta: str                       # 'rapida' | 'llm'
+    ruta: str
     escalo_llm: bool
     etiqueta_final: str
     revision_humana: bool
@@ -34,7 +33,7 @@ class Pipeline:
         print(f"[pipeline] Preparando clasificador (modo: {config.CLASSIFIER_MODE})...")
         self.clf = get_clasificador()
 
-    ################# Flujo de un documento
+
     def procesar(self, texto: str, expediente: Optional[str] = None) -> Resultado:
         pred: Prediccion = self.clf.classify(texto)
         conf = pred.margen if config.CONFIDENCE_METRIC == "margen" else pred.score
@@ -54,14 +53,14 @@ class Pipeline:
                 categoria_base=pred.categoria, score_base=conf,
                 ruta="llm", escalo_llm=True,
                 etiqueta_final=decision.etiqueta_final,
-                revision_humana=True,               # regla de gobernanza 6.3
+                revision_humana=True,
                 vecinos=vecinos, justificacion_llm=decision.justificacion,
             )
 
         self._persistir(texto, res)
         return res
 
-    ################# Persistencia en Oracle
+
     def _persistir(self, texto: str, res: Resultado) -> None:
         con = db.connect()
         try:

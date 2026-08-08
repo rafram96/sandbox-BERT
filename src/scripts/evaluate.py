@@ -1,9 +1,3 @@
-"""Evalua el flujo sobre un test etiquetado (accuracy, reparto, lift de escalar).
-
-Test JSONL: {"id": "...", "texto": "...", "categoria_verdadera": "IT"}
-
-python -m src.scripts.evaluate --test data/test.jsonl [--umbral X]
-"""
 from __future__ import annotations
 
 import argparse
@@ -42,7 +36,7 @@ def main() -> None:
     esc_n = esc_ok_final = esc_ok_base = 0
     por_cat_total = defaultdict(int)
     por_cat_ok = defaultdict(int)
-    confusiones = defaultdict(int)   # (verdadera, predicha) cuando fallan
+    confusiones = defaultdict(int)
 
     for i, f in enumerate(filas, 1):
         verdad = f["categoria_verdadera"]

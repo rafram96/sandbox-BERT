@@ -1,4 +1,3 @@
-"""Recuperacion Top-K con VECTOR_DISTANCE COSINE sobre Oracle 23ai."""
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -11,7 +10,7 @@ from . import db, embeddings
 class Vecino:
     kb_id: int
     categoria: str
-    distancia: float          # 0 = identico, 2 = opuesto (coseno)
+    distancia: float
     texto: str
 
     @property
